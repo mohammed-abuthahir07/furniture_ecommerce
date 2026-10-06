@@ -1,7 +1,6 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
-
 const { connectDB } = require("./config/database");
 const adminAuthRoutes = require("./admin/routes/adminAuthRoutes");
 const categoryRoutes = require("./admin/routes/categoryRoutes");
@@ -16,6 +15,7 @@ const inventoryRoutes = require("./admin/routes/inventoryRoutes");
 const reportRoutes = require("./admin/routes/reportRoutes");
 const analyticsRoutes = require("./admin/routes/analyticsRoutes");
 const notificationRoutes = require("./admin/routes/notificationRoutes");
+const settingsRoutes = require("./admin/routes/settingsRoutes");
 
 const app = express();
 
@@ -38,6 +38,7 @@ app.use("/api/admin/inventory", inventoryRoutes);
 app.use("/api/admin/reports", reportRoutes);
 app.use("/api/admin/analytics", analyticsRoutes);
 app.use("/api/admin/notifications",notificationRoutes);
+app.use("/api/admin/settings",settingsRoutes);
 
 const PORT = process.env.PORT || 5000;
 
