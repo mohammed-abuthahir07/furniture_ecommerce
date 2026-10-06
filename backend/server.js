@@ -12,12 +12,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/", (req, res) => {
-  res.json({
-    success: true,
-    message: "Furniture E-Commerce API is running",
-  });
-});
 
 app.use("/api/admin/auth", adminAuthRoutes);
 app.use("/api/admin/categories", categoryRoutes);
