@@ -16,6 +16,7 @@ const reportRoutes = require("./admin/routes/reportRoutes");
 const analyticsRoutes = require("./admin/routes/analyticsRoutes");
 const notificationRoutes = require("./admin/routes/notificationRoutes");
 const settingsRoutes = require("./admin/routes/settingsRoutes");
+const customizationRequestRoutes = require("./admin/routes/customizationRequestRoutes");
 
 const app = express();
 
@@ -39,6 +40,7 @@ app.use("/api/admin/reports", reportRoutes);
 app.use("/api/admin/analytics", analyticsRoutes);
 app.use("/api/admin/notifications",notificationRoutes);
 app.use("/api/admin/settings",settingsRoutes);
+app.use("/api/admin/customization-requests", customizationRequestRoutes);
 
 const PORT = process.env.PORT || 5000;
 
