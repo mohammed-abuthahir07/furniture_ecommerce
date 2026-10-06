@@ -7,6 +7,8 @@ const adminAuthRoutes = require("./admin/routes/adminAuthRoutes");
 const categoryRoutes = require("./admin/routes/categoryRoutes");
 const productRoutes = require("./admin/routes/productRoutes");
 const productVariantRoutes = require("./admin/routes/productVariantRoutes");
+const productImageRoutes = require("./admin/routes/productImageRoutes");
+const offerRoutes = require("./admin/routes/offerRoutes");
 
 const app = express();
 
@@ -20,6 +22,8 @@ app.use("/api/admin/auth", adminAuthRoutes);
 app.use("/api/admin/categories", categoryRoutes);
 app.use("/api/admin/products", productRoutes);
 app.use("/api/admin/product-variants",productVariantRoutes);
+app.use("/api/admin/product-images",productImageRoutes);
+app.use("/api/admin/offers",offerRoutes);
 
 const PORT = process.env.PORT || 5000;
 
