@@ -1,0 +1,86 @@
+# ==========================================
+# Environment Variables & Secrets (CRITICAL)
+# ==========================================
+.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+*.env
+*.pem
+*.key
+*.cert
+
+# ==========================================
+# Node.js & Express (If using Node backend)
+# ==========================================
+node_modules/
+jspm_packages/
+package-lock.json (optional: keep if committing locks)
+yarn.lock
+pnpm-lock.yaml
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.log
+
+# ==========================================
+# Java & Spring Boot (If using Java backend)
+# ==========================================
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+.mvn/
+mvnw
+mvnw.cmd
+.gradle/
+build/
+
+# ==========================================
+# Python (If using Django/FastAPI/Flask)
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+ENV/
+.venv/
+
+# ==========================================
+# File Uploads / Media Storage
+# ==========================================
+# Ignores local user-uploaded furniture photos/sketches
+public/uploads/
+uploads/
+storage/
+media/
+
+# ==========================================
+# IDEs & Code Editors
+# ==========================================
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.iws
+*.iml
+*.ipr
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# ==========================================
+# OS & System Files
+# ==========================================
+.DS_Store?
+ehthumbs.db
+Icon?
