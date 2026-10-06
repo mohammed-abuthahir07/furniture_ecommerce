@@ -6,6 +6,7 @@ const { connectDB } = require("./config/database");
 const adminAuthRoutes = require("./admin/routes/adminAuthRoutes");
 const categoryRoutes = require("./admin/routes/categoryRoutes");
 const productRoutes = require("./admin/routes/productRoutes");
+const productVariantRoutes = require("./admin/routes/productVariantRoutes");
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/admin/auth", adminAuthRoutes);
 app.use("/api/admin/categories", categoryRoutes);
 app.use("/api/admin/products", productRoutes);
+app.use("/api/admin/product-variants",productVariantRoutes);
 
 const PORT = process.env.PORT || 5000;
 
