@@ -23,7 +23,8 @@ const createProduct = async (req, res) => {
       assembly_required,
     } = req.body;
 
-    // REQUIRED FIELDS
+
+    // CATEGORY REQUIRED
     if (!category_id) {
       return res.status(400).json({
         success: false,
@@ -31,6 +32,8 @@ const createProduct = async (req, res) => {
       });
     }
 
+
+    // NAME REQUIRED
     if (!name || !name.trim()) {
       return res.status(400).json({
         success: false,
@@ -38,6 +41,8 @@ const createProduct = async (req, res) => {
       });
     }
 
+
+    // MRP REQUIRED
     if (mrp === undefined || mrp === null || mrp === "") {
       return res.status(400).json({
         success: false,
@@ -45,6 +50,8 @@ const createProduct = async (req, res) => {
       });
     }
 
+
+    // SELLING PRICE REQUIRED
     if (
       selling_price === undefined ||
       selling_price === null ||
@@ -56,6 +63,16 @@ const createProduct = async (req, res) => {
       });
     }
 
+
+    // MAIN IMAGE REQUIRED
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Main product image is required",
+      });
+    }
+
+
     // PRICE VALIDATION
     if (Number(mrp) < 0 || Number(selling_price) < 0) {
       return res.status(400).json({
@@ -64,12 +81,14 @@ const createProduct = async (req, res) => {
       });
     }
 
+
     if (Number(selling_price) > Number(mrp)) {
       return res.status(400).json({
         success: false,
         message: "Selling price cannot be greater than MRP",
       });
     }
+
 
     // ASSEMBLY VALIDATION
     if (
@@ -82,6 +101,7 @@ const createProduct = async (req, res) => {
       });
     }
 
+
     // CHECK CATEGORY
     const category = await categoryModel.getCategoryById(category_id);
 
@@ -92,6 +112,8 @@ const createProduct = async (req, res) => {
       });
     }
 
+
+    // CATEGORY MUST BE ACTIVE
     if (category.status !== "ACTIVE") {
       return res.status(400).json({
         success: false,
@@ -99,10 +121,17 @@ const createProduct = async (req, res) => {
       });
     }
 
+
+    // IMAGE PATH
+    const mainImage = `/uploads/products/${req.file.filename}`;
+
+
+    // CREATE PRODUCT
     const productId = await productModel.createProduct({
       category_id,
       name: name.trim(),
       brand,
+      main_image: mainImage,
       short_description,
       description,
       mrp,
@@ -117,7 +146,10 @@ const createProduct = async (req, res) => {
       assembly_required,
     });
 
+
+    // GET CREATED PRODUCT
     const product = await productModel.getProductById(productId);
+
 
     return res.status(201).json({
       success: true,
@@ -134,6 +166,7 @@ const createProduct = async (req, res) => {
     });
   }
 };
+
 
 
 // GET ALL PRODUCTS
@@ -158,6 +191,7 @@ const getAllProducts = async (req, res) => {
 };
 
 
+
 // GET PRODUCT BY ID
 const getProductById = async (req, res) => {
   try {
@@ -171,6 +205,7 @@ const getProductById = async (req, res) => {
         message: "Product not found",
       });
     }
+
 
     return res.status(200).json({
       success: true,
@@ -187,6 +222,7 @@ const getProductById = async (req, res) => {
     });
   }
 };
+
 
 
 // UPDATE PRODUCT
@@ -212,7 +248,8 @@ const updateProduct = async (req, res) => {
       assembly_required,
     } = req.body;
 
-    // CHECK PRODUCT
+
+    // CHECK EXISTING PRODUCT
     const existingProduct = await productModel.getProductById(id);
 
     if (!existingProduct) {
@@ -222,7 +259,8 @@ const updateProduct = async (req, res) => {
       });
     }
 
-    // REQUIRED FIELDS
+
+    // CATEGORY REQUIRED
     if (!category_id) {
       return res.status(400).json({
         success: false,
@@ -230,6 +268,8 @@ const updateProduct = async (req, res) => {
       });
     }
 
+
+    // NAME REQUIRED
     if (!name || !name.trim()) {
       return res.status(400).json({
         success: false,
@@ -237,6 +277,8 @@ const updateProduct = async (req, res) => {
       });
     }
 
+
+    // MRP REQUIRED
     if (mrp === undefined || mrp === null || mrp === "") {
       return res.status(400).json({
         success: false,
@@ -244,6 +286,8 @@ const updateProduct = async (req, res) => {
       });
     }
 
+
+    // SELLING PRICE REQUIRED
     if (
       selling_price === undefined ||
       selling_price === null ||
@@ -255,6 +299,7 @@ const updateProduct = async (req, res) => {
       });
     }
 
+
     // PRICE VALIDATION
     if (Number(mrp) < 0 || Number(selling_price) < 0) {
       return res.status(400).json({
@@ -263,12 +308,14 @@ const updateProduct = async (req, res) => {
       });
     }
 
+
     if (Number(selling_price) > Number(mrp)) {
       return res.status(400).json({
         success: false,
         message: "Selling price cannot be greater than MRP",
       });
     }
+
 
     // ASSEMBLY VALIDATION
     if (
@@ -281,6 +328,7 @@ const updateProduct = async (req, res) => {
       });
     }
 
+
     // CHECK CATEGORY
     const category = await categoryModel.getCategoryById(category_id);
 
@@ -291,6 +339,8 @@ const updateProduct = async (req, res) => {
       });
     }
 
+
+    // CATEGORY MUST BE ACTIVE
     if (category.status !== "ACTIVE") {
       return res.status(400).json({
         success: false,
@@ -298,10 +348,19 @@ const updateProduct = async (req, res) => {
       });
     }
 
+
+    // OPTIONAL NEW MAIN IMAGE
+    const mainImage = req.file
+      ? `/uploads/products/${req.file.filename}`
+      : null;
+
+
+    // UPDATE PRODUCT
     await productModel.updateProduct(id, {
       category_id,
       name: name.trim(),
       brand,
+      main_image: mainImage,
       short_description,
       description,
       mrp,
@@ -316,7 +375,10 @@ const updateProduct = async (req, res) => {
       assembly_required,
     });
 
+
+    // GET UPDATED PRODUCT
     const updatedProduct = await productModel.getProductById(id);
+
 
     return res.status(200).json({
       success: true,
@@ -335,12 +397,16 @@ const updateProduct = async (req, res) => {
 };
 
 
-// ACTIVATE / DEACTIVATE PRODUCT
+
+// UPDATE PRODUCT STATUS
 const updateProductStatus = async (req, res) => {
   try {
     const { id } = req.params;
+
     const { status } = req.body;
 
+
+    // VALIDATE STATUS
     if (!["ACTIVE", "INACTIVE"].includes(status)) {
       return res.status(400).json({
         success: false,
@@ -348,6 +414,8 @@ const updateProductStatus = async (req, res) => {
       });
     }
 
+
+    // CHECK PRODUCT
     const existingProduct = await productModel.getProductById(id);
 
     if (!existingProduct) {
@@ -357,9 +425,12 @@ const updateProductStatus = async (req, res) => {
       });
     }
 
+
     await productModel.updateProductStatus(id, status);
 
+
     const updatedProduct = await productModel.getProductById(id);
+
 
     return res.status(200).json({
       success: true,
@@ -378,11 +449,14 @@ const updateProductStatus = async (req, res) => {
 };
 
 
+
 // DELETE PRODUCT
 const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
 
+
+    // CHECK PRODUCT
     const existingProduct = await productModel.getProductById(id);
 
     if (!existingProduct) {
@@ -392,7 +466,9 @@ const deleteProduct = async (req, res) => {
       });
     }
 
+
     await productModel.deleteProduct(id);
+
 
     return res.status(200).json({
       success: true,
@@ -408,6 +484,7 @@ const deleteProduct = async (req, res) => {
     });
   }
 };
+
 
 
 module.exports = {

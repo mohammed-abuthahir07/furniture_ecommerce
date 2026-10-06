@@ -10,14 +10,17 @@ const {
 } = require("../controllers/productController");
 
 const adminAuthMiddleware = require("../../middleware/adminAuthMiddleware");
+const productUpload = require("../../middleware/productUploadMiddleware");
 
 const router = express.Router();
 
 
 // CREATE PRODUCT
+// Main image is required
 router.post(
   "/",
   adminAuthMiddleware,
+  productUpload.single("main_image"),
   createProduct
 );
 
@@ -39,14 +42,16 @@ router.get(
 
 
 // UPDATE PRODUCT
+// Main image is optional during update
 router.put(
   "/:id",
   adminAuthMiddleware,
+  productUpload.single("main_image"),
   updateProduct
 );
 
 
-// ACTIVATE / DEACTIVATE PRODUCT
+// UPDATE PRODUCT STATUS
 router.patch(
   "/:id/status",
   adminAuthMiddleware,

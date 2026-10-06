@@ -6,6 +6,7 @@ const createProduct = async (productData) => {
     category_id,
     name,
     brand,
+    main_image,
     short_description,
     description,
     mrp,
@@ -25,6 +26,7 @@ const createProduct = async (productData) => {
       category_id,
       name,
       brand,
+      main_image,
       short_description,
       description,
       mrp,
@@ -38,11 +40,12 @@ const createProduct = async (productData) => {
       seating_capacity,
       assembly_required
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       category_id,
       name,
       brand || null,
+      main_image || null,
       short_description || null,
       description || null,
       mrp,
@@ -71,6 +74,7 @@ const getAllProducts = async () => {
       c.name AS category_name,
       p.name,
       p.brand,
+      p.main_image,
       p.short_description,
       p.description,
       p.mrp,
@@ -105,6 +109,7 @@ const getProductById = async (id) => {
       c.name AS category_name,
       p.name,
       p.brand,
+      p.main_image,
       p.short_description,
       p.description,
       p.mrp,
@@ -137,6 +142,7 @@ const updateProduct = async (id, productData) => {
     category_id,
     name,
     brand,
+    main_image,
     short_description,
     description,
     mrp,
@@ -151,44 +157,55 @@ const updateProduct = async (id, productData) => {
     assembly_required,
   } = productData;
 
-  const [result] = await pool.execute(
-    `UPDATE products
-     SET
-       category_id = ?,
-       name = ?,
-       brand = ?,
-       short_description = ?,
-       description = ?,
-       mrp = ?,
-       selling_price = ?,
-       material = ?,
-       wood_type = ?,
-       length = ?,
-       width = ?,
-       height = ?,
-       weight = ?,
-       seating_capacity = ?,
-       assembly_required = ?
-     WHERE id = ?`,
-    [
-      category_id,
-      name,
-      brand || null,
-      short_description || null,
-      description || null,
-      mrp,
-      selling_price,
-      material || null,
-      wood_type || null,
-      length || null,
-      width || null,
-      height || null,
-      weight || null,
-      seating_capacity || null,
-      assembly_required || "NO",
-      id,
-    ]
-  );
+  let query = `
+    UPDATE products
+    SET
+      category_id = ?,
+      name = ?,
+      brand = ?,
+      short_description = ?,
+      description = ?,
+      mrp = ?,
+      selling_price = ?,
+      material = ?,
+      wood_type = ?,
+      length = ?,
+      width = ?,
+      height = ?,
+      weight = ?,
+      seating_capacity = ?,
+      assembly_required = ?
+  `;
+
+  const values = [
+    category_id,
+    name,
+    brand || null,
+    short_description || null,
+    description || null,
+    mrp,
+    selling_price,
+    material || null,
+    wood_type || null,
+    length || null,
+    width || null,
+    height || null,
+    weight || null,
+    seating_capacity || null,
+    assembly_required || "NO",
+  ];
+
+  // Replace main image only if a new image was uploaded
+  if (main_image) {
+    query += `, main_image = ?`;
+    values.push(main_image);
+  }
+
+  query += ` WHERE id = ?`;
+
+  values.push(id);
+
+  const [result] = await pool.execute(query, values);
 
   return result.affectedRows;
 };
