@@ -13,6 +13,7 @@ const orderRoutes = require("./admin/routes/orderRoutes");
 const dashboardRoutes = require("./admin/routes/dashboardRoutes");
 const customerRoutes = require("./admin/routes/customerRoutes");
 const inventoryRoutes = require("./admin/routes/inventoryRoutes");
+const reportRoutes = require("./admin/routes/reportRoutes");
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use("/api/admin/orders", orderRoutes);
 app.use("/api/admin/dashboard", dashboardRoutes);
 app.use("/api/admin/customers", customerRoutes);
 app.use("/api/admin/inventory", inventoryRoutes);
+app.use("/api/admin/reports", reportRoutes);
 
 const PORT = process.env.PORT || 5000;
 
