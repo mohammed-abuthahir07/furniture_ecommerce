@@ -10,6 +10,7 @@ const productVariantRoutes = require("./admin/routes/productVariantRoutes");
 const productImageRoutes = require("./admin/routes/productImageRoutes");
 const offerRoutes = require("./admin/routes/offerRoutes");
 const orderRoutes = require("./admin/routes/orderRoutes");
+const dashboardRoutes = require("./admin/routes/dashboardRoutes");
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use("/api/admin/product-variants",productVariantRoutes);
 app.use("/api/admin/product-images",productImageRoutes);
 app.use("/api/admin/offers",offerRoutes);
 app.use("/api/admin/orders", orderRoutes);
+app.use("/api/admin/dashboard", dashboardRoutes);
 
 const PORT = process.env.PORT || 5000;
 
