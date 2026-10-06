@@ -15,8 +15,10 @@ const productUpload = require("../../middleware/productUploadMiddleware");
 const router = express.Router();
 
 
+// =====================================================
 // CREATE PRODUCT
 // Main image is required
+// =====================================================
 router.post(
   "/",
   adminAuthMiddleware,
@@ -25,7 +27,9 @@ router.post(
 );
 
 
+// =====================================================
 // GET ALL PRODUCTS
+// =====================================================
 router.get(
   "/",
   adminAuthMiddleware,
@@ -33,7 +37,9 @@ router.get(
 );
 
 
+// =====================================================
 // GET PRODUCT BY ID
+// =====================================================
 router.get(
   "/:id",
   adminAuthMiddleware,
@@ -41,8 +47,10 @@ router.get(
 );
 
 
+// =====================================================
 // UPDATE PRODUCT
-// Main image is optional during update
+// Main image is optional
+// =====================================================
 router.put(
   "/:id",
   adminAuthMiddleware,
@@ -51,7 +59,9 @@ router.put(
 );
 
 
+// =====================================================
 // UPDATE PRODUCT STATUS
+// =====================================================
 router.patch(
   "/:id/status",
   adminAuthMiddleware,
@@ -59,7 +69,9 @@ router.patch(
 );
 
 
+// =====================================================
 // DELETE PRODUCT
+// =====================================================
 router.delete(
   "/:id",
   adminAuthMiddleware,

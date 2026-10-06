@@ -1,6 +1,8 @@
 const { pool } = require("../../config/database");
 
+// =====================================================
 // CREATE PRODUCT
+// =====================================================
 const createProduct = async (productData) => {
   const {
     category_id,
@@ -19,6 +21,7 @@ const createProduct = async (productData) => {
     weight,
     seating_capacity,
     assembly_required,
+    delivery_days,
   } = productData;
 
   const [result] = await pool.execute(
@@ -38,9 +41,10 @@ const createProduct = async (productData) => {
       height,
       weight,
       seating_capacity,
-      assembly_required
+      assembly_required,
+      delivery_days
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       category_id,
       name,
@@ -58,6 +62,7 @@ const createProduct = async (productData) => {
       weight || null,
       seating_capacity || null,
       assembly_required || "NO",
+      delivery_days ?? 6,
     ]
   );
 
@@ -65,7 +70,9 @@ const createProduct = async (productData) => {
 };
 
 
+// =====================================================
 // GET ALL PRODUCTS
+// =====================================================
 const getAllProducts = async () => {
   const [rows] = await pool.execute(
     `SELECT
@@ -87,6 +94,7 @@ const getAllProducts = async () => {
       p.weight,
       p.seating_capacity,
       p.assembly_required,
+      p.delivery_days,
       p.status,
       p.created_at,
       p.updated_at
@@ -100,7 +108,9 @@ const getAllProducts = async () => {
 };
 
 
+// =====================================================
 // GET PRODUCT BY ID
+// =====================================================
 const getProductById = async (id) => {
   const [rows] = await pool.execute(
     `SELECT
@@ -122,6 +132,7 @@ const getProductById = async (id) => {
       p.weight,
       p.seating_capacity,
       p.assembly_required,
+      p.delivery_days,
       p.status,
       p.created_at,
       p.updated_at
@@ -136,7 +147,9 @@ const getProductById = async (id) => {
 };
 
 
+// =====================================================
 // UPDATE PRODUCT
+// =====================================================
 const updateProduct = async (id, productData) => {
   const {
     category_id,
@@ -155,6 +168,7 @@ const updateProduct = async (id, productData) => {
     weight,
     seating_capacity,
     assembly_required,
+    delivery_days,
   } = productData;
 
   let query = `
@@ -174,7 +188,8 @@ const updateProduct = async (id, productData) => {
       height = ?,
       weight = ?,
       seating_capacity = ?,
-      assembly_required = ?
+      assembly_required = ?,
+      delivery_days = ?
   `;
 
   const values = [
@@ -193,6 +208,7 @@ const updateProduct = async (id, productData) => {
     weight || null,
     seating_capacity || null,
     assembly_required || "NO",
+    delivery_days ?? 6,
   ];
 
   // Replace main image only if a new image was uploaded
@@ -211,7 +227,9 @@ const updateProduct = async (id, productData) => {
 };
 
 
+// =====================================================
 // UPDATE PRODUCT STATUS
+// =====================================================
 const updateProductStatus = async (id, status) => {
   const [result] = await pool.execute(
     `UPDATE products
@@ -224,7 +242,9 @@ const updateProductStatus = async (id, status) => {
 };
 
 
+// =====================================================
 // DELETE PRODUCT
+// =====================================================
 const deleteProduct = async (id) => {
   const [result] = await pool.execute(
     `DELETE FROM products
