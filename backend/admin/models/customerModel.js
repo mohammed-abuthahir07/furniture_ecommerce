@@ -1,40 +1,11 @@
 const { pool } = require("../../config/database");
 
-// CREATE CUSTOMER
-const createCustomer = async (customerData) => {
-  const {
-    name,
-    email,
-    phone,
-    password,
-  } = customerData;
-
-  const [result] = await pool.execute(
-    `
-    INSERT INTO customers (
-      name,
-      email,
-      phone,
-      password
-    )
-    VALUES (?, ?, ?, ?)
-    `,
-    [
-      name,
-      email,
-      phone || null,
-      password,
-    ]
-  );
-
-  return result.insertId;
-};
-
-
+// ============================================================
 // GET ALL CUSTOMERS
+// ============================================================
+
 const getAllCustomers = async () => {
-  const [rows] = await pool.execute(
-    `
+  const [rows] = await pool.execute(`
     SELECT
       c.id,
       c.name,
@@ -74,16 +45,22 @@ const getAllCustomers = async () => {
       c.updated_at
 
     ORDER BY c.id DESC
-    `
-  );
+  `);
 
   return rows;
 };
 
 
-// GET CUSTOMER BY ID
+// ============================================================
+// GET CUSTOMER COMPLETE DETAILS
+// ============================================================
+
 const getCustomerById = async (id) => {
-  const [rows] = await pool.execute(
+  // ----------------------------------------------------------
+  // CUSTOMER INFORMATION
+  // ----------------------------------------------------------
+
+  const [customerRows] = await pool.execute(
     `
     SELECT
       c.id,
@@ -128,40 +105,115 @@ const getCustomerById = async (id) => {
     [id]
   );
 
-  return rows[0];
-};
+  if (customerRows.length === 0) {
+    return null;
+  }
+
+  const customer = customerRows[0];
 
 
-// UPDATE CUSTOMER
-const updateCustomer = async (id, customerData) => {
-  const {
-    name,
-    email,
-    phone,
-  } = customerData;
+  // ----------------------------------------------------------
+  // CUSTOMER ORDERS
+  // ----------------------------------------------------------
 
-  const [result] = await pool.execute(
+  const [orderRows] = await pool.execute(
     `
-    UPDATE customers
-    SET
-      name = ?,
-      email = ?,
-      phone = ?
-    WHERE id = ?
+    SELECT
+      o.id,
+      o.order_number,
+      o.customer_name,
+      o.customer_email,
+      o.customer_phone,
+
+      o.shipping_address,
+      o.shipping_city,
+      o.shipping_state,
+      o.shipping_pincode,
+
+      o.subtotal,
+      o.discount_amount,
+      o.shipping_charge,
+      o.total_amount,
+
+      o.payment_method,
+      o.payment_status,
+      o.order_status,
+
+      o.notes,
+
+      o.created_at,
+      o.updated_at
+
+    FROM orders o
+
+    WHERE o.customer_id = ?
+
+    ORDER BY o.created_at DESC
     `,
-    [
-      name,
-      email,
-      phone || null,
-      id,
-    ]
+    [id]
   );
 
-  return result.affectedRows;
+
+  // ----------------------------------------------------------
+  // GET PRODUCTS FOR EACH ORDER
+  // ----------------------------------------------------------
+
+  const orders = [];
+
+  for (const order of orderRows) {
+    const [itemRows] = await pool.execute(
+      `
+      SELECT
+        oi.id,
+        oi.order_id,
+
+        oi.product_id,
+        oi.variant_id,
+
+        oi.product_name,
+        oi.variant_name,
+        oi.color,
+
+        oi.quantity,
+        oi.unit_price,
+        oi.subtotal,
+
+        p.main_image
+
+      FROM order_items oi
+
+      LEFT JOIN products p
+        ON oi.product_id = p.id
+
+      WHERE oi.order_id = ?
+
+      ORDER BY oi.id ASC
+      `,
+      [order.id]
+    );
+
+    orders.push({
+      ...order,
+      items: itemRows,
+    });
+  }
+
+
+  // ----------------------------------------------------------
+  // FINAL CUSTOMER RESPONSE
+  // ----------------------------------------------------------
+
+  return {
+    ...customer,
+    orders,
+  };
 };
 
 
+// ============================================================
 // UPDATE CUSTOMER STATUS
+// ============================================================
+
 const updateCustomerStatus = async (id, status) => {
   const [result] = await pool.execute(
     `
@@ -169,69 +221,19 @@ const updateCustomerStatus = async (id, status) => {
     SET status = ?
     WHERE id = ?
     `,
-    [
-      status,
-      id,
-    ]
+    [status, id]
   );
 
   return result.affectedRows;
 };
 
 
-// DELETE CUSTOMER
-const deleteCustomer = async (id) => {
-  const [result] = await pool.execute(
-    `
-    DELETE FROM customers
-    WHERE id = ?
-    `,
-    [id]
-  );
-
-  return result.affectedRows;
-};
-
-
-// GET CUSTOMER ORDER HISTORY
-const getCustomerOrders = async (customerId) => {
-  const [rows] = await pool.execute(
-    `
-    SELECT
-      id,
-      order_number,
-      customer_name,
-      customer_email,
-      customer_phone,
-      subtotal,
-      discount_amount,
-      shipping_charge,
-      total_amount,
-      payment_method,
-      payment_status,
-      order_status,
-      created_at,
-      updated_at
-
-    FROM orders
-
-    WHERE customer_id = ?
-
-    ORDER BY created_at DESC
-    `,
-    [customerId]
-  );
-
-  return rows;
-};
-
+// ============================================================
+// EXPORT
+// ============================================================
 
 module.exports = {
-  createCustomer,
   getAllCustomers,
   getCustomerById,
-  updateCustomer,
   updateCustomerStatus,
-  deleteCustomer,
-  getCustomerOrders,
 };

@@ -1,13 +1,9 @@
 const express = require("express");
 
 const {
-  createCustomerController,
   getCustomers,
   getCustomer,
-  editCustomer,
   changeCustomerStatus,
-  removeCustomer,
-  getCustomerOrderHistory,
 } = require("../controllers/customerController");
 
 const adminAuthMiddleware = require("../../middleware/adminAuthMiddleware");
@@ -15,15 +11,10 @@ const adminAuthMiddleware = require("../../middleware/adminAuthMiddleware");
 const router = express.Router();
 
 
-// CREATE CUSTOMER
-router.post(
-  "/",
-  adminAuthMiddleware,
-  createCustomerController
-);
-
-
+// ============================================================
 // GET ALL CUSTOMERS
+// ============================================================
+
 router.get(
   "/",
   adminAuthMiddleware,
@@ -31,15 +22,10 @@ router.get(
 );
 
 
-// GET CUSTOMER ORDER HISTORY
-router.get(
-  "/:id/orders",
-  adminAuthMiddleware,
-  getCustomerOrderHistory
-);
+// ============================================================
+// GET COMPLETE CUSTOMER DETAILS
+// ============================================================
 
-
-// GET CUSTOMER BY ID
 router.get(
   "/:id",
   adminAuthMiddleware,
@@ -47,27 +33,14 @@ router.get(
 );
 
 
-// UPDATE CUSTOMER
-router.put(
-  "/:id",
-  adminAuthMiddleware,
-  editCustomer
-);
+// ============================================================
+// ACTIVATE / DEACTIVATE CUSTOMER
+// ============================================================
 
-
-// UPDATE CUSTOMER STATUS
 router.patch(
   "/:id/status",
   adminAuthMiddleware,
   changeCustomerStatus
-);
-
-
-// DELETE CUSTOMER
-router.delete(
-  "/:id",
-  adminAuthMiddleware,
-  removeCustomer
 );
 
 

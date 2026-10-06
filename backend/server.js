@@ -11,6 +11,7 @@ const productImageRoutes = require("./admin/routes/productImageRoutes");
 const offerRoutes = require("./admin/routes/offerRoutes");
 const orderRoutes = require("./admin/routes/orderRoutes");
 const dashboardRoutes = require("./admin/routes/dashboardRoutes");
+const customerRoutes = require("./admin/routes/customerRoutes");
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use("/api/admin/product-images",productImageRoutes);
 app.use("/api/admin/offers",offerRoutes);
 app.use("/api/admin/orders", orderRoutes);
 app.use("/api/admin/dashboard", dashboardRoutes);
+app.use("/api/admin/customers", customerRoutes);
 
 const PORT = process.env.PORT || 5000;
 
