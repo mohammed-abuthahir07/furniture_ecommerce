@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
+const cookieParser = require("cookie-parser");
 const { connectDB } = require("./config/database");
 const adminAuthRoutes = require("./admin/routes/adminAuthRoutes");
 const categoryRoutes = require("./admin/routes/categoryRoutes");
@@ -26,10 +27,12 @@ const cartRoutes = require("./customer/routes/cartRoutes");
 const customizationRequestRoutes1 =require("./customer/routes/customizationRequestRoutes");
 const orderRoutes1 = require("./customer/routes/orderRoutes");
 const notificationRoutes1 = require("./customer/routes/notificationRoutes");
+const forgotPasswordRoutes = require("./customer/routes/forgotPasswordRoutes")
 
 const app = express();
 
 app.use(cors());
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -42,6 +45,7 @@ app.use("/api/customer/customization-requests",customizationRequestRoutes1);
 app.use("/api/customer/wishlist", wishlistRoutes);
 app.use("/api/customer/orders",orderRoutes1);
 app.use("/api/customer/notifications",notificationRoutes1);
+app.use("/api/customer/auth",forgotPasswordRoutes);
 
 // ADMIN
 app.use("/api/admin/auth", adminAuthRoutes);
