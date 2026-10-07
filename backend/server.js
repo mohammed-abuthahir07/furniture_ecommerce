@@ -17,6 +17,7 @@ const analyticsRoutes = require("./admin/routes/analyticsRoutes");
 const notificationRoutes = require("./admin/routes/notificationRoutes");
 const settingsRoutes = require("./admin/routes/settingsRoutes");
 const customizationRequestRoutes = require("./admin/routes/customizationRequestRoutes");
+const customerAuthRoutes = require("./customer/routes/customerAuthRoutes");
 
 const app = express();
 
@@ -24,6 +25,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// CUSTOMER
+app.use("/api/customer/auth",customerAuthRoutes);
 
 // ADMIN
 app.use("/api/admin/auth", adminAuthRoutes);
