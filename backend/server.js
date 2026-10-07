@@ -18,6 +18,7 @@ const notificationRoutes = require("./admin/routes/notificationRoutes");
 const settingsRoutes = require("./admin/routes/settingsRoutes");
 const customizationRequestRoutes = require("./admin/routes/customizationRequestRoutes");
 const customerAuthRoutes = require("./customer/routes/customerAuthRoutes");
+const customerProfileRoutes = require("./customer/routes/customerProfileRoutes");
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // CUSTOMER
 app.use("/api/customer/auth",customerAuthRoutes);
+app.use("/api/customer/profile",customerProfileRoutes);
 
 // ADMIN
 app.use("/api/admin/auth", adminAuthRoutes);
