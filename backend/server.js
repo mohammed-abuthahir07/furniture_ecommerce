@@ -23,6 +23,7 @@ const wishlistRoutes = require("./customer/routes/wishlistRoutes");
 const reviewRoutes = require("./customer/routes/reviewRoutes");
 const publicReviewRoutes = require("./public/routes/publicReviewRoutes");
 const cartRoutes = require("./customer/routes/cartRoutes");
+const customizationRequestRoutes1 =require("./customer/routes/customizationRequestRoutes");
 
 const app = express();
 
@@ -35,6 +36,8 @@ app.use("/api/customer/auth",customerAuthRoutes);
 app.use("/api/customer/profile",customerProfileRoutes);
 app.use("/api/customer/reviews", reviewRoutes);
 app.use("/api/customer/cart",cartRoutes);
+app.use("/api/customer/customization-requests",customizationRequestRoutes1);
+app.use("/api/customer/wishlist", wishlistRoutes);
 
 // ADMIN
 app.use("/api/admin/auth", adminAuthRoutes);
@@ -52,7 +55,7 @@ app.use("/api/admin/analytics", analyticsRoutes);
 app.use("/api/admin/notifications",notificationRoutes);
 app.use("/api/admin/settings",settingsRoutes);
 app.use("/api/admin/customization-requests", customizationRequestRoutes);
-app.use("/api/customer/wishlist", wishlistRoutes);
+
 
 // Public 
 app.use("/api/public/products",publicReviewRoutes);
