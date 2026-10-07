@@ -31,6 +31,9 @@ const forgotPasswordRoutes = require("./customer/routes/forgotPasswordRoutes")
 const publicCategoryRoutes = require("./public/routes/categoryRoutes");
 const publicProductRoutes = require("./public/routes/productRoutes");
 const publicProductFilterRoutes = require("./public/routes/productFilterRoutes");
+const publicOfferRoutes = require( "./public/routes/offerRoutes");
+const publicRecommendationRoutes = require("./public/routes/recommendationRoutes");
+const publicHomeRoutes = require("./public/routes/homeRoutes");
 
 const app = express();
 
@@ -44,6 +47,9 @@ app.use("/api/public/categories", publicCategoryRoutes);
 app.use("/api/public/products",publicReviewRoutes);
 app.use("/api/public/products", publicProductRoutes);
 app.use("/api/public/product-filters",publicProductFilterRoutes);
+app.use("/api/public/offers",publicOfferRoutes);
+app.use("/api/public/recommendations",publicRecommendationRoutes);
+app.use("/api/public/home", publicHomeRoutes);
 
 // CUSTOMER
 app.use("/api/customer/auth",customerAuthRoutes);
