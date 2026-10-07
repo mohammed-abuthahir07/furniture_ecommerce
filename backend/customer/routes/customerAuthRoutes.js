@@ -3,6 +3,7 @@ const express = require("express");
 const {
   registerCustomer,
   loginCustomer,
+  googleLogin,
   getCustomerProfile
 } = require("../controllers/customerAuthController");
 
@@ -34,6 +35,18 @@ router.post(
 router.post(
   "/login",
   loginCustomer
+);
+
+
+/*
+|--------------------------------------------------------------------------
+| CONTINUE WITH GOOGLE
+|--------------------------------------------------------------------------
+*/
+
+router.post(
+  "/google",
+  googleLogin
 );
 
 

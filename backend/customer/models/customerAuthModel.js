@@ -14,6 +14,7 @@ const findCustomerByEmail = async (email) => {
       id,
       name,
       email,
+      google_id,
       phone,
       password,
       status,
@@ -23,6 +24,35 @@ const findCustomerByEmail = async (email) => {
     WHERE email = ?
     `,
     [email]
+  );
+
+  return rows[0];
+};
+
+
+/*
+|--------------------------------------------------------------------------
+| FIND CUSTOMER BY GOOGLE ID
+|--------------------------------------------------------------------------
+*/
+
+const findCustomerByGoogleId = async (googleId) => {
+  const [rows] = await pool.execute(
+    `
+    SELECT
+      id,
+      name,
+      email,
+      google_id,
+      phone,
+      password,
+      status,
+      created_at,
+      updated_at
+    FROM customers
+    WHERE google_id = ?
+    `,
+    [googleId]
   );
 
   return rows[0];
@@ -42,6 +72,7 @@ const findCustomerById = async (id) => {
       id,
       name,
       email,
+      google_id,
       phone,
       status,
       created_at,
@@ -66,22 +97,25 @@ const createCustomer = async ({
   name,
   email,
   phone,
-  password
+  password,
+  google_id
 }) => {
   const [result] = await pool.execute(
     `
     INSERT INTO customers (
       name,
       email,
+      google_id,
       phone,
       password,
       status
     )
-    VALUES (?, ?, ?, ?, 'ACTIVE')
+    VALUES (?, ?, ?, ?, ?, 'ACTIVE')
     `,
     [
       name,
       email,
+      google_id || null,
       phone || null,
       password
     ]
@@ -91,8 +125,37 @@ const createCustomer = async ({
 };
 
 
+/*
+|--------------------------------------------------------------------------
+| LINK GOOGLE ACCOUNT TO EXISTING CUSTOMER
+|--------------------------------------------------------------------------
+*/
+
+const updateCustomerGoogleId = async (
+  customerId,
+  googleId
+) => {
+  const [result] = await pool.execute(
+    `
+    UPDATE customers
+    SET
+      google_id = ?
+    WHERE id = ?
+    `,
+    [
+      googleId,
+      customerId
+    ]
+  );
+
+  return result.affectedRows;
+};
+
+
 module.exports = {
   findCustomerByEmail,
+  findCustomerByGoogleId,
   findCustomerById,
-  createCustomer
+  createCustomer,
+  updateCustomerGoogleId
 };

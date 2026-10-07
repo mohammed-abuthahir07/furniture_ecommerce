@@ -36,3 +36,17 @@ const seedAdmin = async () => {
 };
 
 seedAdmin();
+
+
+// 1. Customer Authentication       ✅
+// 2. Customer Profile Management   ← NEXT
+// 3. Customer Addresses
+// 4. Public Products
+// 5. Wishlist
+// 6. Cart
+// 7. Customization Requests
+// 8. Ratings & Reviews
+// 9. Checkout
+// 10. Payments
+// 11. Orders & Tracking
+// 12. Customer Notifications
