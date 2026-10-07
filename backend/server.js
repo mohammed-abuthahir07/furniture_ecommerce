@@ -29,6 +29,7 @@ const orderRoutes1 = require("./customer/routes/orderRoutes");
 const notificationRoutes1 = require("./customer/routes/notificationRoutes");
 const forgotPasswordRoutes = require("./customer/routes/forgotPasswordRoutes")
 const publicCategoryRoutes = require("./public/routes/categoryRoutes");
+const publicProductRoutes = require("./public/routes/productRoutes");
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use(express.urlencoded({ extended: true }));
 // PUBLIC
 app.use("/api/public/categories", publicCategoryRoutes);
 app.use("/api/public/products",publicReviewRoutes);
+app.use("/api/public/products", publicProductRoutes);
 
 // CUSTOMER
 app.use("/api/customer/auth",customerAuthRoutes);
