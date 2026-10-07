@@ -30,6 +30,7 @@ const notificationRoutes1 = require("./customer/routes/notificationRoutes");
 const forgotPasswordRoutes = require("./customer/routes/forgotPasswordRoutes")
 const publicCategoryRoutes = require("./public/routes/categoryRoutes");
 const publicProductRoutes = require("./public/routes/productRoutes");
+const publicProductFilterRoutes = require("./public/routes/productFilterRoutes");
 
 const app = express();
 
@@ -42,6 +43,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/public/categories", publicCategoryRoutes);
 app.use("/api/public/products",publicReviewRoutes);
 app.use("/api/public/products", publicProductRoutes);
+app.use("/api/public/product-filters",publicProductFilterRoutes);
 
 // CUSTOMER
 app.use("/api/customer/auth",customerAuthRoutes);
