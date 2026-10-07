@@ -20,6 +20,8 @@ const customizationRequestRoutes = require("./admin/routes/customizationRequestR
 const customerAuthRoutes = require("./customer/routes/customerAuthRoutes");
 const customerProfileRoutes = require("./customer/routes/customerProfileRoutes");
 const wishlistRoutes = require("./customer/routes/wishlistRoutes");
+const reviewRoutes = require("./customer/routes/reviewRoutes");
+const publicReviewRoutes = require("./public/routes/publicReviewRoutes");
 
 const app = express();
 
@@ -30,6 +32,7 @@ app.use(express.urlencoded({ extended: true }));
 // CUSTOMER
 app.use("/api/customer/auth",customerAuthRoutes);
 app.use("/api/customer/profile",customerProfileRoutes);
+app.use("/api/customer/reviews", reviewRoutes);
 
 // ADMIN
 app.use("/api/admin/auth", adminAuthRoutes);
@@ -48,6 +51,9 @@ app.use("/api/admin/notifications",notificationRoutes);
 app.use("/api/admin/settings",settingsRoutes);
 app.use("/api/admin/customization-requests", customizationRequestRoutes);
 app.use("/api/customer/wishlist", wishlistRoutes);
+
+// Public 
+app.use("/api/public/products",publicReviewRoutes);
 
 const PORT = process.env.PORT || 5000;
 
