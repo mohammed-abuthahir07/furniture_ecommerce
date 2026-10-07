@@ -6,6 +6,7 @@ const {
   placeOrder,
   getMyOrders,
   getMyOrderById,
+  cancelMyOrder,
 } = require("../controllers/orderController");
 
 const router = express.Router();
@@ -50,6 +51,12 @@ router.get(
   "/:id",
   customerAuthMiddleware,
   getMyOrderById
+);
+
+router.patch(
+  "/:id/cancel",
+  customerAuthMiddleware,
+  cancelMyOrder
 );
 
 module.exports = router;

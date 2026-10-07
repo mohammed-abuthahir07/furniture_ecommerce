@@ -6,6 +6,9 @@ const {
   clearCustomerCart,
   getCustomerOrders,
   getCustomerOrderById,
+  getCustomerOrderForCancellation,
+  restoreVariantStock,
+  cancelCustomerOrder,
 } = require("../models/orderModel");
 
 const { pool } = require("../../config/database");
@@ -496,9 +499,206 @@ const getMyOrderById = async (req, res) => {
     });
   }
 };
+/*
+|--------------------------------------------------------------------------
+| CANCEL MY ORDER
+|--------------------------------------------------------------------------
+| PATCH /api/customer/orders/:id/cancel
+|--------------------------------------------------------------------------
+*/
 
+const cancelMyOrder = async (req, res) => {
+  const customerId = req.customer.id;
+  const orderId = Number(req.params.id);
+
+  let connection;
+
+  try {
+    /*
+    |--------------------------------------------------------------------------
+    | Validate Order ID
+    |--------------------------------------------------------------------------
+    */
+
+    if (!Number.isInteger(orderId) || orderId <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order ID",
+      });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Get Connection
+    |--------------------------------------------------------------------------
+    */
+
+    connection = await pool.getConnection();
+
+    /*
+    |--------------------------------------------------------------------------
+    | Start Transaction
+    |--------------------------------------------------------------------------
+    */
+
+    await connection.beginTransaction();
+
+    /*
+    |--------------------------------------------------------------------------
+    | Get Order + Items
+    |--------------------------------------------------------------------------
+    */
+
+    const order = await getCustomerOrderForCancellation(
+      connection,
+      customerId,
+      orderId
+    );
+
+    if (!order) {
+      await connection.rollback();
+
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Check Order Status
+    |--------------------------------------------------------------------------
+    */
+
+    const cancellableStatuses = [
+      "PENDING",
+      "CONFIRMED",
+      "PROCESSING",
+    ];
+
+    if (!cancellableStatuses.includes(order.order_status)) {
+      await connection.rollback();
+
+      return res.status(400).json({
+        success: false,
+        message: `Order cannot be cancelled because its current status is ${order.order_status}`,
+      });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Validate Order Items
+    |--------------------------------------------------------------------------
+    */
+
+    if (!order.items || order.items.length === 0) {
+      await connection.rollback();
+
+      return res.status(400).json({
+        success: false,
+        message: "Order has no items to restore",
+      });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Restore Stock
+    |--------------------------------------------------------------------------
+    */
+
+    for (const item of order.items) {
+      await restoreVariantStock(
+        connection,
+        item.variant_id,
+        item.quantity
+      );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Change Order Status
+    |--------------------------------------------------------------------------
+    */
+
+    const updatedRows = await cancelCustomerOrder(
+      connection,
+      orderId,
+      customerId
+    );
+
+    if (updatedRows !== 1) {
+      throw new Error(
+        "Failed to cancel the order"
+      );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Commit Transaction
+    |--------------------------------------------------------------------------
+    */
+
+    await connection.commit();
+
+    /*
+    |--------------------------------------------------------------------------
+    | Success
+    |--------------------------------------------------------------------------
+    */
+
+    return res.status(200).json({
+      success: true,
+      message: "Order cancelled successfully",
+      data: {
+        order_id: order.id,
+        order_number: order.order_number,
+        order_status: "CANCELLED",
+      },
+    });
+  } catch (error) {
+    /*
+    |--------------------------------------------------------------------------
+    | Rollback
+    |--------------------------------------------------------------------------
+    */
+
+    if (connection) {
+      try {
+        await connection.rollback();
+      } catch (rollbackError) {
+        console.error(
+          "Rollback failed:",
+          rollbackError.message
+        );
+      }
+    }
+
+    console.error(
+      "Cancel order error:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        error.message ||
+        "Failed to cancel order",
+    });
+  } finally {
+    /*
+    |--------------------------------------------------------------------------
+    | Release Connection
+    |--------------------------------------------------------------------------
+    */
+
+    if (connection) {
+      connection.release();
+    }
+  }
+};
 module.exports = {
   placeOrder,
   getMyOrders,
   getMyOrderById,
+  cancelMyOrder,
 };

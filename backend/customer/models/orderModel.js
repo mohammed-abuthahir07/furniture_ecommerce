@@ -357,6 +357,114 @@ const getCustomerOrderById = async (
   return order;
 };
 
+/*
+|--------------------------------------------------------------------------
+| Get Customer Order For Cancellation
+|--------------------------------------------------------------------------
+*/
+
+const getCustomerOrderForCancellation = async (
+  connection,
+  customerId,
+  orderId
+) => {
+  const [orders] = await connection.execute(
+    `
+    SELECT
+      id,
+      order_number,
+      customer_id,
+      order_status
+    FROM orders
+    WHERE id = ?
+      AND customer_id = ?
+    FOR UPDATE
+    `,
+    [orderId, customerId]
+  );
+
+  if (orders.length === 0) {
+    return null;
+  }
+
+  const order = orders[0];
+
+  const [items] = await connection.execute(
+    `
+    SELECT
+      id,
+      order_id,
+      product_id,
+      variant_id,
+      quantity
+    FROM order_items
+    WHERE order_id = ?
+    FOR UPDATE
+    `,
+    [order.id]
+  );
+
+  order.items = items;
+
+  return order;
+};
+
+/*
+|--------------------------------------------------------------------------
+| Restore Variant Stock
+|--------------------------------------------------------------------------
+*/
+
+const restoreVariantStock = async (
+  connection,
+  variantId,
+  quantity
+) => {
+  const [result] = await connection.execute(
+    `
+    UPDATE product_variants
+    SET stock_quantity = stock_quantity + ?
+    WHERE id = ?
+    `,
+    [quantity, variantId]
+  );
+
+  if (result.affectedRows !== 1) {
+    throw new Error(
+      `Failed to restore stock for variant ${variantId}`
+    );
+  }
+};
+
+/*
+|--------------------------------------------------------------------------
+| Cancel Customer Order
+|--------------------------------------------------------------------------
+*/
+
+const cancelCustomerOrder = async (
+  connection,
+  orderId,
+  customerId
+) => {
+  const [result] = await connection.execute(
+    `
+    UPDATE orders
+    SET order_status = 'CANCELLED'
+    WHERE id = ?
+      AND customer_id = ?
+      AND order_status IN (
+        'PENDING',
+        'CONFIRMED',
+        'PROCESSING'
+      )
+    `,
+    [orderId, customerId]
+  );
+
+  return result.affectedRows;
+};
+
 module.exports = {
   getCustomerCartItems,
   createOrder,
@@ -365,4 +473,9 @@ module.exports = {
   clearCustomerCart,
   getCustomerOrders,
   getCustomerOrderById,
+
+  // Cancellation
+  getCustomerOrderForCancellation,
+  restoreVariantStock,
+  cancelCustomerOrder,
 };
