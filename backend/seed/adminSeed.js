@@ -40,7 +40,7 @@ seedAdmin();
 
 // 1. Customer Authentication       ✅
 // 2. Customer Profile Management   ← NEXT
-// 3. Customer Addresses
+// 3. Comments
 // 4. Public Products
 // 5. Wishlist
 // 6. Cart
