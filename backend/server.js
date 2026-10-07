@@ -28,6 +28,7 @@ const customizationRequestRoutes1 =require("./customer/routes/customizationReque
 const orderRoutes1 = require("./customer/routes/orderRoutes");
 const notificationRoutes1 = require("./customer/routes/notificationRoutes");
 const forgotPasswordRoutes = require("./customer/routes/forgotPasswordRoutes")
+const publicCategoryRoutes = require("./public/routes/categoryRoutes");
 
 const app = express();
 
@@ -35,6 +36,10 @@ app.use(cors());
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// PUBLIC
+app.use("/api/public/categories", publicCategoryRoutes);
+app.use("/api/public/products",publicReviewRoutes);
 
 // CUSTOMER
 app.use("/api/customer/auth",customerAuthRoutes);
@@ -65,8 +70,7 @@ app.use("/api/admin/settings",settingsRoutes);
 app.use("/api/admin/customization-requests", customizationRequestRoutes);
 
 
-// Public 
-app.use("/api/public/products",publicReviewRoutes);
+
 
 const PORT = process.env.PORT || 5000;
 
