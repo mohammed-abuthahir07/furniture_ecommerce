@@ -50,6 +50,9 @@ export function HomePage() {
       if (offRes.status === 'fulfilled' && offRes.value.success) {
         setOffers(offRes.value.data || []);
       }
+      if (prodRes.status === 'rejected' && catRes.status === 'rejected') {
+        setError('Unable to load the furniture catalog right now. Please try again.');
+      }
     } catch (err) {
       setError(err.message || 'Failed to load home page.');
     } finally {
@@ -107,6 +110,10 @@ export function HomePage() {
                     : 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=1000&q=80'
                 }
                 alt="Living room interior furniture"
+                width="640"
+                height="480"
+                loading="eager"
+                fetchPriority="high"
                 onError={handleImageError}
               />
             </div>
@@ -208,6 +215,7 @@ export function HomePage() {
                   <img
                     src={getImageUrl(cat.image)}
                     alt={cat.name}
+                    loading="lazy"
                     onError={handleImageError}
                   />
                 </div>

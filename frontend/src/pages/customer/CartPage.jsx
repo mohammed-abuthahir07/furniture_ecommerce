@@ -2,7 +2,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, ShoppingBag, ArrowRight, ShieldCheck, Truck } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import QuantitySelector from '../../components/common/QuantitySelector';
-import PriceDisplay from '../../components/common/PriceDisplay';
 import EmptyState from '../../components/common/EmptyState';
 import { PageLoader } from '../../components/common/Loader';
 import { getImageUrl, handleImageError } from '../../utils/imageUrl';
@@ -17,13 +16,11 @@ export function CartPage() {
   }
 
   return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
+    <div className="container cart-page">
+      <div className="cart-page-header">
         <div>
-          <h2>Shopping Cart ({totalItems} {totalItems === 1 ? 'item' : 'items'})</h2>
-          <p style={{ color: 'var(--neutral-500)', fontSize: '0.9rem' }}>
-            Review your selected furniture pieces before proceeding to checkout.
-          </p>
+          <h1>Shopping Cart ({totalItems} {totalItems === 1 ? 'item' : 'items'})</h1>
+          <p>Review your selected furniture pieces before proceeding to checkout.</p>
         </div>
 
         {cartItems.length > 0 && (
@@ -52,7 +49,7 @@ export function CartPage() {
           {/* Cart Items List */}
           <div className="cart-items-list">
             {cartItems.map((item) => (
-              <div key={item.id} className="cart-item-card">
+              <article key={item.id} className="cart-item-card">
                 <img
                   src={getImageUrl(item.main_image)}
                   alt={item.product_name}
@@ -60,50 +57,38 @@ export function CartPage() {
                   onError={handleImageError}
                 />
 
-                <div>
-                  <Link
-                    to={`/products/${item.product_id}`}
-                    style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--neutral-900)', display: 'block', marginBottom: 2 }}
-                  >
-                    {item.product_name}
-                  </Link>
-
-                  <div style={{ fontSize: '0.82rem', color: 'var(--neutral-500)', marginBottom: '0.5rem' }}>
-                    Variant: <strong style={{ color: 'var(--neutral-800)' }}>{item.variant_name}</strong>
-                    {item.color && ` (${item.color})`}
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
-                    <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>
-                      Unit Price: {formatCurrency(item.unit_price || item.selling_price)}
-                    </div>
-
-                    <QuantitySelector
-                      quantity={item.quantity}
-                      onChange={(newQty) => updateQuantity(item.id, newQty)}
-                    />
-                  </div>
+                <div className="cart-item-info">
+                  <Link to={`/products/${item.product_id}`}>{item.product_name}</Link>
+                  <p>
+                    {item.variant_name}
+                    {item.color ? ` · ${item.color}` : ''}
+                  </p>
+                  <strong>{formatCurrency(item.unit_price || item.selling_price)}</strong>
                 </div>
 
-                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'space-between', height: '100%' }}>
+                <div className="cart-item-qty">
+                  <QuantitySelector
+                    quantity={item.quantity}
+                    onChange={(newQty) => updateQuantity(item.id, newQty)}
+                  />
+                </div>
+
+                <div className="cart-item-total">
+                  <span>Item total</span>
+                  <strong>{formatCurrency(item.item_subtotal || Number(item.selling_price) * item.quantity)}</strong>
                   <button
                     type="button"
-                    className="modal-close-btn cart-item-remove-btn"
+                    className="cart-item-remove-btn"
                     onClick={() => removeFromCart(item.id)}
-                    title="Remove item from cart"
+                    aria-label={`Remove ${item.product_name} from cart`}
                   >
-                    <Trash2 size={16} color="var(--danger-500)" />
+                    <Trash2 size={16} />
+                    Remove
                   </button>
-
-                  <div style={{ marginTop: 'auto' }}>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--neutral-400)' }}>Item Total</div>
-                    <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--neutral-900)' }}>
-                      {formatCurrency(item.item_subtotal || Number(item.selling_price) * item.quantity)}
-                    </div>
-                  </div>
                 </div>
-              </div>
+              </article>
             ))}
+            <Link to="/products" className="cart-continue">Continue browsing furniture</Link>
           </div>
 
           {/* Cart Summary Card */}

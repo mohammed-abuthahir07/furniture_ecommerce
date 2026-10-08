@@ -10,6 +10,7 @@ export function FileUploadField({
   error,
   hint,
   currentPreviewUrl,
+  compact = false,
 }) {
   const fileInputRef = useRef(null);
   const [preview, setPreview] = useState(currentPreviewUrl || null);
@@ -46,7 +47,7 @@ export function FileUploadField({
         style={{
           border: '2px dashed var(--neutral-300)',
           borderRadius: 'var(--radius-md)',
-          padding: '1.25rem',
+          padding: compact ? '0.7rem' : '1.25rem',
           textAlign: 'center',
           backgroundColor: '#faf9f7',
           cursor: 'pointer',
@@ -103,26 +104,29 @@ export function FileUploadField({
             </div>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: compact ? '0.65rem' : '0.5rem', flexDirection: compact ? 'row' : 'column' }}>
             <div
               style={{
-                width: 44,
-                height: 44,
+                width: compact ? 32 : 44,
+                height: compact ? 32 : 44,
                 borderRadius: 'var(--radius-full)',
                 background: 'var(--primary-100)',
                 color: 'var(--primary-700)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                flexShrink: 0,
               }}
             >
-              <Upload size={20} />
+              <Upload size={compact ? 16 : 20} />
             </div>
-            <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--neutral-800)' }}>
-              Click or drag image to upload
-            </div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--neutral-500)' }}>
-              PNG, JPG, WEBP up to 5MB
+            <div style={{ textAlign: compact ? 'left' : 'center' }}>
+              <div style={{ fontSize: compact ? '0.85rem' : '0.9rem', fontWeight: 600, color: 'var(--neutral-800)' }}>
+                {compact ? 'Add a reference photo' : 'Click or drag image to upload'}
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--neutral-500)' }}>
+                PNG, JPG, WEBP up to 5MB
+              </div>
             </div>
           </div>
         )}

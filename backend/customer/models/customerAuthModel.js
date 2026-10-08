@@ -16,6 +16,7 @@ const findCustomerByEmail = async (email) => {
       email,
       google_id,
       phone,
+      profile_image,
       password,
       status,
       created_at,
@@ -45,6 +46,7 @@ const findCustomerByGoogleId = async (googleId) => {
       email,
       google_id,
       phone,
+      profile_image,
       password,
       status,
       created_at,
@@ -74,6 +76,7 @@ const findCustomerById = async (id) => {
       email,
       google_id,
       phone,
+      profile_image,
       status,
       created_at,
       updated_at

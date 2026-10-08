@@ -17,6 +17,9 @@ const connectDB = async () => {
     const connection = await pool.getConnection();
     console.log("MySQL database connected successfully");
     connection.release();
+
+    const { ensurePerformanceIndexes } = require("./ensureIndexes");
+    await ensurePerformanceIndexes();
   } catch (error) {
     console.error("MySQL database connection failed:", error.message);
     process.exit(1);

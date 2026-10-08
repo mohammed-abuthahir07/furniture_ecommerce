@@ -35,7 +35,7 @@ const updateProfile = async (req, res) => {
   try {
     const customerId = req.customer.id;
 
-    const { name } = req.body;
+    const { name, phone } = req.body;
 
     if (!name || !name.trim()) {
       return res.status(400).json({
@@ -73,6 +73,25 @@ const updateProfile = async (req, res) => {
       If a new image was uploaded, use the new image path.
       Otherwise keep the existing profile image.
     */
+    let customerPhone = null;
+
+    if (phone !== undefined && phone !== null) {
+      customerPhone = String(phone).trim();
+
+      if (customerPhone !== "") {
+        const phoneRegex = /^[0-9+\-\s()]{7,20}$/;
+
+        if (!phoneRegex.test(customerPhone)) {
+          return res.status(400).json({
+            success: false,
+            message: "Please provide a valid phone number"
+          });
+        }
+      } else {
+        customerPhone = null;
+      }
+    }
+
     const profileImage = req.file
       ? `/uploads/customers/${req.file.filename}`
       : currentCustomer.profile_image;
@@ -80,6 +99,7 @@ const updateProfile = async (req, res) => {
     await updateCustomerProfile({
       customerId,
       name: trimmedName,
+      phone: customerPhone,
       profileImage
     });
 

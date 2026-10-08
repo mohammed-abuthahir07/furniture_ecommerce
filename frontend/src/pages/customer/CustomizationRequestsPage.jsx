@@ -174,7 +174,7 @@ export function CustomizationRequestsPage() {
               )}
 
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <Link to={`/account/customization-requests/${req.id}`} className="btn btn-secondary btn-sm">
+                <Link to={`/account/customizations/${req.id}`} className="btn btn-secondary btn-sm">
                   <span>View Details & Actions</span>
                   <ChevronRight size={14} />
                 </Link>
@@ -190,8 +190,27 @@ export function CustomizationRequestsPage() {
         onClose={() => setIsModalOpen(false)}
         title="Submit Customization Request"
         size="md"
+        footer={(
+          <>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => setIsModalOpen(false)}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="custom-request-form"
+              className="btn btn-primary btn-sm"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Submitting Request...' : 'Send Request'}
+            </button>
+          </>
+        )}
       >
-        <form onSubmit={handleCreateRequest}>
+        <form id="custom-request-form" onSubmit={handleCreateRequest}>
           <SelectField
             label="Select Base Product to Customize"
             value={productId}
@@ -203,35 +222,18 @@ export function CustomizationRequestsPage() {
 
           <TextAreaField
             label="Detailed Customization Requirement"
-            rows={5}
-            placeholder="Specify your custom length × width × height, preferred wood (Sheesham, Teak, Walnut), wood stain/finish, or upholstery modifications..."
+            rows={2}
+            placeholder="Length × width × height, wood, stain, or upholstery."
             value={requirement}
             onChange={(e) => setRequirement(e.target.value)}
             required
           />
 
           <FileUploadField
+            compact
             label="Attach Reference Photo / Sketch (Optional)"
             onChange={setCustomerImageFile}
-            hint="Upload drawing, space measurements, or fabric reference (PNG, JPG)"
           />
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={() => setIsModalOpen(false)}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="btn btn-primary btn-sm"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Submitting Request...' : 'Send Request to Artisans'}
-            </button>
-          </div>
         </form>
       </Modal>
     </div>

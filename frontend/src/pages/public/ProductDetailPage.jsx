@@ -85,8 +85,38 @@ export function ProductDetailPage() {
   };
 
   useEffect(() => {
-    fetchProduct();
+    let active = true;
     setQuantity(1);
+    setIsLoading(true);
+    setError(null);
+
+    Promise.all([
+      publicApi.getProductById(id),
+      publicApi.getRecommendations(id, 4),
+    ]).then(([prodRes, recRes]) => {
+      if (!active) return;
+      if (prodRes.success && prodRes.data) {
+        setProduct(prodRes.data);
+        if (Array.isArray(prodRes.data.variants) && prodRes.data.variants.length > 0) {
+          const available = prodRes.data.variants.find((v) => v.stock_quantity > 0) || prodRes.data.variants[0];
+          setSelectedVariant(available);
+        }
+      } else {
+        setProduct(null);
+      }
+      if (recRes.success && Array.isArray(recRes.data)) {
+        setRecommendations(recRes.data);
+      }
+    }).catch((err) => {
+      if (!active) return;
+      setError(err.message || 'Product not found or unavailable.');
+    }).finally(() => {
+      if (active) setIsLoading(false);
+    });
+
+    return () => {
+      active = false;
+    };
   }, [id]);
 
   if (isLoading) {
@@ -407,18 +437,7 @@ export function ProductDetailPage() {
           </div>
 
           {/* Need Customization Option */}
-          <div
-            style={{
-              padding: '1rem',
-              background: 'var(--primary-50)',
-              border: '1px solid var(--primary-200)',
-              borderRadius: 'var(--radius-md)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginTop: '1rem',
-            }}
-          >
+          <div className="custom-request-bar">
             <div>
               <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--primary-900)' }}>
                 Need customized dimensions or custom finish?
@@ -428,7 +447,7 @@ export function ProductDetailPage() {
               </div>
             </div>
             <Link
-              to={`/account/customization-requests?product_id=${product.id}`}
+              to={`/account/customizations?product_id=${product.id}`}
               className="btn btn-outline btn-sm"
               style={{ background: '#fff' }}
             >

@@ -57,24 +57,31 @@ export function WishlistProvider({ children }) {
     }
     const currentlyWishlisted = wishlistIds.has(id);
 
+    setWishlistIds((prev) => {
+      const next = new Set(prev);
+      if (currentlyWishlisted) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+    setWishlist((prev) => (
+      currentlyWishlisted
+        ? prev.filter((item) => Number(item.product_id) !== id)
+        : [...prev, { product_id: id }]
+    ));
+
     try {
-      if (currentlyWishlisted) {
-        const res = await customerApi.removeFromWishlist(id);
-        if (res.success) {
-          success(res.message || 'Removed from wishlist.');
-          await fetchWishlist();
-          return true;
-        }
-      } else {
-        const res = await customerApi.addToWishlist(id);
-        if (res.success) {
-          success(res.message || 'Added to wishlist!');
-          await fetchWishlist();
-          return true;
-        }
+      const res = currentlyWishlisted
+        ? await customerApi.removeFromWishlist(id)
+        : await customerApi.addToWishlist(id);
+      if (res.success) {
+        success(res.message || (currentlyWishlisted ? 'Removed from wishlist.' : 'Added to wishlist!'));
+        fetchWishlist();
+        return true;
       }
+      await fetchWishlist();
       return false;
     } catch (err) {
+      await fetchWishlist();
       toastError(err.message || 'Failed to update wishlist.');
       return false;
     }

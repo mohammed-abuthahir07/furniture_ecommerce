@@ -1,5 +1,6 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { lazy, Suspense } from 'react';
+import { Routes, Route, Navigate, useParams, useSearchParams } from 'react-router-dom';
+import { PageLoader } from '../components/common/Loader';
 
 // Layouts
 import PublicLayout from '../layouts/PublicLayout';
@@ -13,52 +14,60 @@ import PublicOnlyRoute from './PublicOnlyRoute';
 
 // Public Pages
 import HomePage from '../pages/public/HomePage';
-import CategoriesPage from '../pages/public/CategoriesPage';
-import CategoryProductsPage from '../pages/public/CategoryProductsPage';
 import ProductListingPage from '../pages/public/ProductListingPage';
 import ProductDetailPage from '../pages/public/ProductDetailPage';
-import OffersPage from '../pages/public/OffersPage';
-import ProductComparisonPage from '../pages/public/ProductComparisonPage';
-import CustomRequirementPage from '../pages/public/CustomRequirementPage';
 import LoginPage from '../pages/public/LoginPage';
 import RegisterPage from '../pages/public/RegisterPage';
-import ForgotPasswordPage from '../pages/public/ForgotPasswordPage';
 import NotFoundPage from '../pages/public/NotFoundPage';
-import StorePolicyPage from '../pages/public/StorePolicyPage';
-
-// Customer Pages
-import AccountDashboardPage from '../pages/customer/AccountDashboardPage';
-import MyProfilePage from '../pages/customer/MyProfilePage';
 import CartPage from '../pages/customer/CartPage';
 import CheckoutPage from '../pages/customer/CheckoutPage';
-import MyOrdersPage from '../pages/customer/MyOrdersPage';
-import OrderDetailPage from '../pages/customer/OrderDetailPage';
 import WishlistPage from '../pages/customer/WishlistPage';
-import MyReviewsPage from '../pages/customer/MyReviewsPage';
-import NotificationsPage from '../pages/customer/NotificationsPage';
-import CustomizationRequestsPage from '../pages/customer/CustomizationRequestsPage';
-import CustomizationRequestDetailPage from '../pages/customer/CustomizationRequestDetailPage';
 
-// Admin Pages
-import AdminLoginPage from '../pages/admin/AdminLoginPage';
-import AdminDashboardPage from '../pages/admin/AdminDashboardPage';
-import AdminCategoriesPage from '../pages/admin/AdminCategoriesPage';
-import AdminProductsPage from '../pages/admin/AdminProductsPage';
-import AdminProductDetailPage from '../pages/admin/AdminProductDetailPage';
-import AdminInventoryPage from '../pages/admin/AdminInventoryPage';
-import AdminOrdersPage from '../pages/admin/AdminOrdersPage';
-import AdminOrderDetailPage from '../pages/admin/AdminOrderDetailPage';
-import AdminCustomersPage from '../pages/admin/AdminCustomersPage';
-import AdminOffersPage from '../pages/admin/AdminOffersPage';
-import AdminCustomizationRequestsPage from '../pages/admin/AdminCustomizationRequestsPage';
-import AdminCustomRequirementsPage from '../pages/admin/AdminCustomRequirementsPage';
-import AdminAnalyticsPage from '../pages/admin/AdminAnalyticsPage';
-import AdminReportsPage from '../pages/admin/AdminReportsPage';
-import AdminNotificationsPage from '../pages/admin/AdminNotificationsPage';
-import AdminSettingsPage from '../pages/admin/AdminSettingsPage';
+const CategoriesPage = lazy(() => import('../pages/public/CategoriesPage'));
+const CategoryProductsPage = lazy(() => import('../pages/public/CategoryProductsPage'));
+const OffersPage = lazy(() => import('../pages/public/OffersPage'));
+const ProductComparisonPage = lazy(() => import('../pages/public/ProductComparisonPage'));
+const CustomRequirementPage = lazy(() => import('../pages/public/CustomRequirementPage'));
+const ForgotPasswordPage = lazy(() => import('../pages/public/ForgotPasswordPage'));
+const StorePolicyPage = lazy(() => import('../pages/public/StorePolicyPage'));
+
+const AccountDashboardPage = lazy(() => import('../pages/customer/AccountDashboardPage'));
+const MyProfilePage = lazy(() => import('../pages/customer/MyProfilePage'));
+const MyOrdersPage = lazy(() => import('../pages/customer/MyOrdersPage'));
+const OrderDetailPage = lazy(() => import('../pages/customer/OrderDetailPage'));
+const MyReviewsPage = lazy(() => import('../pages/customer/MyReviewsPage'));
+const NotificationsPage = lazy(() => import('../pages/customer/NotificationsPage'));
+const CustomizationRequestsPage = lazy(() => import('../pages/customer/CustomizationRequestsPage'));
+const CustomizationRequestDetailPage = lazy(() => import('../pages/customer/CustomizationRequestDetailPage'));
+
+const AdminLoginPage = lazy(() => import('../pages/admin/AdminLoginPage'));
+const AdminDashboardPage = lazy(() => import('../pages/admin/AdminDashboardPage'));
+const AdminCategoriesPage = lazy(() => import('../pages/admin/AdminCategoriesPage'));
+const AdminProductsPage = lazy(() => import('../pages/admin/AdminProductsPage'));
+const AdminProductDetailPage = lazy(() => import('../pages/admin/AdminProductDetailPage'));
+const AdminInventoryPage = lazy(() => import('../pages/admin/AdminInventoryPage'));
+const AdminOrdersPage = lazy(() => import('../pages/admin/AdminOrdersPage'));
+const AdminOrderDetailPage = lazy(() => import('../pages/admin/AdminOrderDetailPage'));
+const AdminCustomersPage = lazy(() => import('../pages/admin/AdminCustomersPage'));
+const AdminOffersPage = lazy(() => import('../pages/admin/AdminOffersPage'));
+const AdminCustomizationRequestsPage = lazy(() => import('../pages/admin/AdminCustomizationRequestsPage'));
+const AdminCustomRequirementsPage = lazy(() => import('../pages/admin/AdminCustomRequirementsPage'));
+const AdminAnalyticsPage = lazy(() => import('../pages/admin/AdminAnalyticsPage'));
+const AdminReportsPage = lazy(() => import('../pages/admin/AdminReportsPage'));
+const AdminNotificationsPage = lazy(() => import('../pages/admin/AdminNotificationsPage'));
+const AdminSettingsPage = lazy(() => import('../pages/admin/AdminSettingsPage'));
+
+function LegacyCustomizationRedirect() {
+  const { id } = useParams();
+  const [params] = useSearchParams();
+  const search = params.toString();
+  const target = id ? `/account/customizations/${id}` : '/account/customizations';
+  return <Navigate to={`${target}${search ? `?${search}` : ''}`} replace />;
+}
 
 const AppRoutes = () => {
   return (
+    <Suspense fallback={<PageLoader />}>
     <Routes>
       {/* -------------------------------------------------------------
           PUBLIC STOREFRONT ROUTES (Wrapped in PublicLayout)
@@ -76,19 +85,9 @@ const AppRoutes = () => {
         <Route path="/terms" element={<StorePolicyPage />} />
         <Route path="/shipping" element={<StorePolicyPage />} />
         
-        {/* Cart is publicly viewable */}
-        <Route path="/cart" element={<CartPage />} />
-
-        {/* Customer Auth Pages (PublicOnly) */}
-        <Route element={<PublicOnlyRoute />}>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ForgotPasswordPage />} />
-        </Route>
-
-        {/* Checkout - requires Customer Auth */}
+        {/* Cart and checkout stay closed until the customer signs in */}
         <Route element={<ProtectedCustomerRoute />}>
+          <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
         </Route>
 
@@ -96,6 +95,14 @@ const AppRoutes = () => {
         <Route element={<ProtectedCustomerRoute />}>
           <Route path="/wishlist" element={<WishlistPage />} />
         </Route>
+      </Route>
+
+      {/* Login and register show the form only, with no storefront header or footer. */}
+      <Route element={<PublicOnlyRoute />}>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ForgotPasswordPage />} />
       </Route>
 
       {/* -------------------------------------------------------------
@@ -113,6 +120,8 @@ const AppRoutes = () => {
           <Route path="/account/notifications" element={<NotificationsPage />} />
           <Route path="/account/customizations" element={<CustomizationRequestsPage />} />
           <Route path="/account/customizations/:id" element={<CustomizationRequestDetailPage />} />
+          <Route path="/account/customization-requests" element={<LegacyCustomizationRedirect />} />
+          <Route path="/account/customization-requests/:id" element={<LegacyCustomizationRedirect />} />
         </Route>
       </Route>
 
@@ -152,6 +161,7 @@ const AppRoutes = () => {
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
+    </Suspense>
   );
 };
 

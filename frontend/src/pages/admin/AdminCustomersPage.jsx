@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, Eye, Phone, Mail, Calendar, Package } from 'lucide-react';
+import { Users, Eye, Phone, Mail, Calendar, Package, Trash2 } from 'lucide-react';
 import adminApi from '../../services/adminApi';
 import AdminDataTable from '../../components/admin/AdminDataTable';
 import StatusBadge from '../../components/common/StatusBadge';
@@ -54,6 +54,27 @@ export function AdminCustomersPage() {
       toastError(err.message || 'Failed to fetch customer order history.');
     } finally {
       setIsLoadingDetail(false);
+    }
+  };
+
+  const handleDeleteCustomer = async (cust) => {
+    const confirmed = window.confirm(
+      `Delete ${cust.name} and their orders, reviews, and payments? This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await adminApi.deleteCustomer(cust.id);
+      if (res.success) {
+        success('Customer and their records were deleted.');
+        if (selectedCustomer && selectedCustomer.id === cust.id) {
+          setIsModalOpen(false);
+          setSelectedCustomer(null);
+        }
+        fetchCustomers();
+      }
+    } catch (err) {
+      toastError(err.message || 'Failed to delete customer.');
     }
   };
 
@@ -143,6 +164,15 @@ export function AdminCustomersPage() {
             title="View customer profile & order history"
           >
             <Eye size={15} />
+          </button>
+          <button
+            type="button"
+            className="action-btn-sm delete"
+            onClick={() => handleDeleteCustomer(row)}
+            title="Delete customer and their orders"
+            aria-label={`Delete ${row.name}`}
+          >
+            <Trash2 size={15} />
           </button>
         </div>
       ),

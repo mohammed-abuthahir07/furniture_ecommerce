@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Mail, ShieldAlert, Armchair } from 'lucide-react';
+import { Lock, Armchair } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import adminApi from '../../services/adminApi';
-import InputField from '../../components/forms/InputField';
 import { useToast } from '../../context/ToastContext';
 
 export function AdminLoginPage() {
@@ -42,61 +41,17 @@ export function AdminLoginPage() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: '#0f172a',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '1.5rem',
-      }}
-    >
-      <div
-        style={{
-          background: '#1e293b',
-          border: '1px solid #334155',
-          borderRadius: 'var(--radius-lg)',
-          padding: '2.5rem',
-          width: '100%',
-          maxWidth: '420px',
-          color: '#ffffff',
-          boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
-        }}
-      >
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div
-            style={{
-              width: 54,
-              height: 54,
-              borderRadius: 'var(--radius-md)',
-              background: 'var(--primary-600)',
-              color: '#ffffff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 1rem',
-            }}
-          >
-            <Armchair size={28} />
-          </div>
-          <h2 style={{ color: '#ffffff', fontSize: '1.5rem', fontWeight: 800 }}>Admin Portal</h2>
-          <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginTop: 4 }}>
-            WoodCraft Furniture Management System
-          </p>
+    <div className="admin-login">
+      <div className="admin-login-card">
+        <div className="admin-login-brand">
+          <Armchair size={22} />
+          <h2>WoodCraft Admin</h2>
+          <p>Sign in to manage the furniture store.</p>
         </div>
 
         {formError && (
           <div
-            style={{
-              padding: '0.75rem 1rem',
-              background: 'rgba(239, 68, 68, 0.15)',
-              color: '#f87171',
-              borderRadius: 'var(--radius-sm)',
-              fontSize: '0.85rem',
-              marginBottom: '1.25rem',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-            }}
+            className="admin-login-error"
           >
             {formError}
           </div>
@@ -104,11 +59,11 @@ export function AdminLoginPage() {
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label" style={{ color: '#cbd5e1' }}>Admin Email</label>
+            <label className="form-label" htmlFor="admin-email">Admin Email</label>
             <input
+              id="admin-email"
               type="email"
               className="form-input"
-              style={{ background: '#0f172a', borderColor: '#475569', color: '#fff' }}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="admin@furniture.com"
@@ -118,11 +73,11 @@ export function AdminLoginPage() {
           </div>
 
           <div className="form-group">
-            <label className="form-label" style={{ color: '#cbd5e1' }}>Password</label>
+            <label className="form-label" htmlFor="admin-password">Password</label>
             <input
+              id="admin-password"
               type="password"
               className="form-input"
-              style={{ background: '#0f172a', borderColor: '#475569', color: '#fff' }}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"

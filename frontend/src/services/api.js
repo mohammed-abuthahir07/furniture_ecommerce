@@ -14,6 +14,27 @@ export const API_BASE_URL = import.meta.env.DEV
 
 const BASE_URL = API_BASE_URL;
 
+const TECHNICAL_MESSAGE = /sql|ER_|ECONN|AxiosError|ERR_NETWORK|Cannot read properties|syntax error|stack/i;
+
+function toUserMessage(status, message) {
+  const text = String(message || '').trim();
+  if (status === 0 || TECHNICAL_MESSAGE.test(text)) {
+    if (status === 0 || /ECONN|ERR_NETWORK|fetch/i.test(text)) {
+      return 'Unable to connect to the server. Please check your internet connection and try again.';
+    }
+    return 'Something went wrong on our side. Please try again in a moment.';
+  }
+  if (text) return text;
+  if (status === 401) return 'Your session has expired. Please sign in again.';
+  if (status === 403) return 'You do not have permission to do that.';
+  if (status === 404) return 'We could not find what you were looking for.';
+  if (status === 409) return 'This action conflicts with the current data. Please refresh and try again.';
+  if (status === 422 || status === 400) return 'Please check the highlighted fields and try again.';
+  if (status === 429) return 'Too many requests. Please wait a moment and try again.';
+  if (status >= 500) return 'Something went wrong on our side. Please try again in a moment.';
+  return 'Something went wrong. Please try again.';
+}
+
 export const CUSTOMER_TOKEN_KEY = 'furniture_customer_token';
 export const ADMIN_TOKEN_KEY = 'furniture_admin_token';
 
@@ -72,14 +93,11 @@ class ApiClient {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        // Handle 401 Unauthorized token expiry
         if (response.status === 401) {
-          // Token expired or invalid
-          // We can dispatch custom event if needed
           window.dispatchEvent(new CustomEvent('auth-expired', { detail: { role } }));
         }
 
-        const error = new Error(data.message || `Request failed with status ${response.status}`);
+        const error = new Error(toUserMessage(response.status, data.message));
         error.status = response.status;
         error.data = data;
         throw error;
@@ -87,8 +105,11 @@ class ApiClient {
 
       return data;
     } catch (err) {
-      if (err.name === 'TypeError' && err.message.includes('fetch')) {
-        const netErr = new Error('Unable to connect to server. Please ensure the backend is running.');
+      if (err.name === 'AbortError') {
+        throw err;
+      }
+      if (err.name === 'TypeError' && String(err.message).toLowerCase().includes('fetch')) {
+        const netErr = new Error('Unable to connect to the server. Please check your internet connection and try again.');
         netErr.status = 0;
         throw netErr;
       }

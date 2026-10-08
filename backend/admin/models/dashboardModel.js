@@ -40,7 +40,10 @@ const getDashboardSummary = async () => {
       (SELECT COUNT(*)
        FROM product_variants
        WHERE status = 'ACTIVE'
-       AND stock_quantity = 0) AS out_of_stock_variants
+       AND stock_quantity = 0) AS out_of_stock_variants,
+
+      (SELECT COUNT(*)
+       FROM customers) AS total_customers
   `);
 
   return rows[0];
@@ -94,7 +97,8 @@ const getRevenueSummary = async () => {
       COALESCE(
         SUM(
           CASE
-            WHEN DATE(created_at) = CURDATE()
+            WHEN created_at >= CURDATE()
+            AND created_at < CURDATE() + INTERVAL 1 DAY
             AND order_status != 'CANCELLED'
             THEN total_amount
             ELSE 0
@@ -106,8 +110,8 @@ const getRevenueSummary = async () => {
       COALESCE(
         SUM(
           CASE
-            WHEN MONTH(created_at) = MONTH(CURDATE())
-            AND YEAR(created_at) = YEAR(CURDATE())
+            WHEN created_at >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
+            AND created_at < DATE_FORMAT(CURDATE(), '%Y-%m-01') + INTERVAL 1 MONTH
             AND order_status != 'CANCELLED'
             THEN total_amount
             ELSE 0
@@ -119,7 +123,8 @@ const getRevenueSummary = async () => {
       COALESCE(
         SUM(
           CASE
-            WHEN YEAR(created_at) = YEAR(CURDATE())
+            WHEN created_at >= DATE_FORMAT(CURDATE(), '%Y-01-01')
+            AND created_at < DATE_FORMAT(CURDATE(), '%Y-01-01') + INTERVAL 1 YEAR
             AND order_status != 'CANCELLED'
             THEN total_amount
             ELSE 0
@@ -143,40 +148,46 @@ const getTodaySummary = async () => {
       (
         SELECT COUNT(*)
         FROM orders
-        WHERE DATE(created_at) = CURDATE()
+        WHERE created_at >= CURDATE()
+          AND created_at < CURDATE() + INTERVAL 1 DAY
       ) AS today_orders,
 
       (
         SELECT COALESCE(SUM(total_amount), 0)
         FROM orders
-        WHERE DATE(created_at) = CURDATE()
-        AND order_status != 'CANCELLED'
+        WHERE created_at >= CURDATE()
+          AND created_at < CURDATE() + INTERVAL 1 DAY
+          AND order_status != 'CANCELLED'
       ) AS today_revenue,
 
       (
         SELECT COUNT(*)
         FROM products
-        WHERE DATE(created_at) = CURDATE()
+        WHERE created_at >= CURDATE()
+          AND created_at < CURDATE() + INTERVAL 1 DAY
       ) AS products_added_today,
 
       (
         SELECT COUNT(*)
         FROM product_variants
-        WHERE DATE(created_at) = CURDATE()
+        WHERE created_at >= CURDATE()
+          AND created_at < CURDATE() + INTERVAL 1 DAY
       ) AS variants_added_today,
 
       (
         SELECT COUNT(*)
         FROM orders
-        WHERE DATE(created_at) = CURDATE()
-        AND order_status = 'DELIVERED'
+        WHERE created_at >= CURDATE()
+          AND created_at < CURDATE() + INTERVAL 1 DAY
+          AND order_status = 'DELIVERED'
       ) AS delivered_today,
 
       (
         SELECT COUNT(*)
         FROM orders
-        WHERE DATE(created_at) = CURDATE()
-        AND order_status = 'CANCELLED'
+        WHERE created_at >= CURDATE()
+          AND created_at < CURDATE() + INTERVAL 1 DAY
+          AND order_status = 'CANCELLED'
       ) AS cancelled_today
   `);
 
@@ -207,6 +218,7 @@ const getLowStockVariants = async () => {
       AND pv.stock_quantity > 0
       AND pv.stock_quantity <= 5
     ORDER BY pv.stock_quantity ASC, pv.updated_at DESC
+    LIMIT 20
   `);
 
   return rows;
@@ -233,6 +245,7 @@ const getOutOfStockVariants = async () => {
     WHERE pv.status = 'ACTIVE'
       AND pv.stock_quantity = 0
     ORDER BY pv.updated_at DESC
+    LIMIT 20
   `);
 
   return rows;

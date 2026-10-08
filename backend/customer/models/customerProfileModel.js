@@ -25,6 +25,7 @@ const getCustomerProfileById = async (customerId) => {
 const updateCustomerProfile = async ({
   customerId,
   name,
+  phone,
   profileImage
 }) => {
   const [result] = await pool.execute(
@@ -32,11 +33,13 @@ const updateCustomerProfile = async ({
     UPDATE customers
     SET
       name = ?,
+      phone = ?,
       profile_image = ?
     WHERE id = ?
     `,
     [
       name,
+      phone,
       profileImage,
       customerId
     ]

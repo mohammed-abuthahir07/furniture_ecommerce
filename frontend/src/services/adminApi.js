@@ -14,11 +14,11 @@ export const adminApi = {
 
   // Dashboard
   getDashboardSummary: () => api.get('/api/admin/dashboard/summary', {}, 'ADMIN'),
-  getOrderStatusCounts: () => api.get('/api/admin/dashboard/order-status-counts', {}, 'ADMIN'),
+  getOrderStatusCounts: () => api.get('/api/admin/dashboard/order-status', {}, 'ADMIN'),
   getRevenueSummary: () => api.get('/api/admin/dashboard/revenue', {}, 'ADMIN'),
   getTodayMetrics: () => api.get('/api/admin/dashboard/today', {}, 'ADMIN'),
-  getLowStockVariants: () => api.get('/api/admin/dashboard/low-stock-variants', {}, 'ADMIN'),
-  getOutOfStockVariants: () => api.get('/api/admin/dashboard/out-of-stock-variants', {}, 'ADMIN'),
+  getLowStockVariants: () => api.get('/api/admin/dashboard/low-stock', {}, 'ADMIN'),
+  getOutOfStockVariants: () => api.get('/api/admin/dashboard/out-of-stock', {}, 'ADMIN'),
   getRecentOrders: () => api.get('/api/admin/dashboard/recent-orders', {}, 'ADMIN'),
   getRecentProducts: () => api.get('/api/admin/dashboard/recent-products', {}, 'ADMIN'),
   getBestSellingProducts: () => api.get('/api/admin/dashboard/best-selling-products', {}, 'ADMIN'),
@@ -74,6 +74,7 @@ export const adminApi = {
   getAllCustomers: () => api.get('/api/admin/customers', {}, 'ADMIN'),
   getCustomerById: (id) => api.get(`/api/admin/customers/${id}`, {}, 'ADMIN'),
   changeCustomerStatus: (id, status) => api.patch(`/api/admin/customers/${id}/status`, { status }, {}, 'ADMIN'),
+  deleteCustomer: (id) => api.delete(`/api/admin/customers/${id}`, {}, 'ADMIN'),
 
   // Inventory
   getAllInventory: () => api.get('/api/admin/inventory', {}, 'ADMIN'),

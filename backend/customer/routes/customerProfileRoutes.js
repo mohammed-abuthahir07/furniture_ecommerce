@@ -26,6 +26,7 @@ router.get(
   Update logged-in customer's profile
   Supports:
   - name
+  - phone
   - profile_image
 */
 router.put(

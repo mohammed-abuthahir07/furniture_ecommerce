@@ -15,7 +15,6 @@ import adminApi from '../../services/adminApi';
 import AdminMetricCard from '../../components/admin/AdminMetricCard';
 import StatusBadge from '../../components/common/StatusBadge';
 import { SimpleDonutChart } from '../../components/admin/SimpleChart';
-import { PageLoader } from '../../components/common/Loader';
 import { ErrorState } from '../../components/common/ErrorState';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 
@@ -41,7 +40,6 @@ export function AdminDashboardPage() {
         ordersRes,
         stockRes,
         sellersRes,
-        customersRes,
       ] = await Promise.allSettled([
         adminApi.getDashboardSummary(),
         adminApi.getRevenueSummary(),
@@ -50,7 +48,6 @@ export function AdminDashboardPage() {
         adminApi.getRecentOrders(),
         adminApi.getLowStockVariants(),
         adminApi.getBestSellingProducts(),
-        adminApi.getAllCustomers(),
       ]);
 
       if (sumRes.status === 'fulfilled' && sumRes.value.success) {
@@ -58,15 +55,12 @@ export function AdminDashboardPage() {
         const revenue = revenueRes.status === 'fulfilled' && revenueRes.value.success
           ? (revenueRes.value.revenue || {})
           : {};
-        const customerCount = customersRes.status === 'fulfilled' && Array.isArray(customersRes.value.customers)
-          ? customersRes.value.customers.length
-          : 0;
         setSummary({
           ...summaryData,
           total_revenue: revenue.total_revenue || 0,
           total_products: Number(summaryData.active_products || 0) + Number(summaryData.inactive_products || 0),
           total_categories: summaryData.active_categories || 0,
-          total_customers: customerCount,
+          total_customers: Number(summaryData.total_customers || 0),
         });
       }
       if (todayRes.status === 'fulfilled' && todayRes.value.success) {
@@ -105,7 +99,19 @@ export function AdminDashboardPage() {
   }, []);
 
   if (isLoading) {
-    return <PageLoader text="Loading live admin dashboard metrics..." />;
+    return (
+      <div>
+        <div className="admin-metrics-grid">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="skeleton" style={{ height: 96, borderRadius: 8 }} />
+          ))}
+        </div>
+        <div className="admin-split-grid" style={{ marginTop: '1rem' }}>
+          <div className="skeleton" style={{ height: 220, borderRadius: 8 }} />
+          <div className="skeleton" style={{ height: 220, borderRadius: 8 }} />
+        </div>
+      </div>
+    );
   }
 
   if (error) {

@@ -214,6 +214,60 @@ const getCustomerById = async (id) => {
 // UPDATE CUSTOMER STATUS
 // ============================================================
 
+const deleteCustomerAccount = async (id) => {
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    const [orders] = await connection.execute(
+      "SELECT id FROM orders WHERE customer_id = ?",
+      [id]
+    );
+    const orderIds = orders.map((order) => order.id);
+
+    if (orderIds.length > 0) {
+      const placeholders = orderIds.map(() => "?").join(", ");
+      await connection.execute(
+        `DELETE FROM order_items WHERE order_id IN (${placeholders})`,
+        orderIds
+      );
+    }
+
+    await connection.execute("DELETE FROM orders WHERE customer_id = ?", [id]);
+    await connection.execute("DELETE FROM product_reviews WHERE customer_id = ?", [id]);
+    await connection.execute("DELETE FROM customer_carts WHERE customer_id = ?", [id]);
+    await connection.execute("DELETE FROM customer_wishlist WHERE customer_id = ?", [id]);
+    await connection.execute("DELETE FROM notifications WHERE customer_id = ?", [id]);
+    await connection.execute(
+      "DELETE FROM product_customization_requests WHERE customer_id = ?",
+      [id]
+    );
+    await connection.execute(
+      "DELETE FROM custom_requirements WHERE customer_id = ?",
+      [id]
+    );
+    await connection.execute(
+      "DELETE FROM customer_password_otps WHERE customer_id = ?",
+      [id]
+    );
+
+    const [result] = await connection.execute(
+      "DELETE FROM customers WHERE id = ?",
+      [id]
+    );
+
+    await connection.commit();
+    return result.affectedRows;
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+};
+
+
 const updateCustomerStatus = async (id, status) => {
   const [result] = await pool.execute(
     `
@@ -236,4 +290,5 @@ module.exports = {
   getAllCustomers,
   getCustomerById,
   updateCustomerStatus,
+  deleteCustomerAccount,
 };

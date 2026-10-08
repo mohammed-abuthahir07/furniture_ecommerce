@@ -1,11 +1,47 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LogIn, Lock, Mail, Armchair } from 'lucide-react';
+import { LogIn, Armchair, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import customerApi from '../../services/customerApi';
 import InputField from '../../components/forms/InputField';
 import { useToast } from '../../context/ToastContext';
 import { isValidEmail } from '../../utils/validators';
+import AuthVideoBackground from '../../components/common/AuthVideoBackground';
+
+const GOOGLE_SCRIPT_SRC = 'https://accounts.google.com/gsi/client';
+let googleScriptPromise = null;
+let initializedGoogleClientId = '';
+
+function loadGoogleScript() {
+  if (window.google?.accounts?.id) return Promise.resolve();
+  if (googleScriptPromise) return googleScriptPromise;
+
+  googleScriptPromise = new Promise((resolve, reject) => {
+    const finish = () => {
+      if (window.google?.accounts?.id) resolve();
+      else reject(new Error('Google sign-in did not load.'));
+    };
+    const existing = document.querySelector(`script[src="${GOOGLE_SCRIPT_SRC}"]`);
+    if (existing) {
+      existing.addEventListener('load', finish, { once: true });
+      existing.addEventListener('error', () => reject(new Error('Google sign-in did not load.')), { once: true });
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = GOOGLE_SCRIPT_SRC;
+    script.async = true;
+    script.onload = finish;
+    script.onerror = () => reject(new Error('Google sign-in did not load.'));
+    document.head.appendChild(script);
+  });
+
+  return googleScriptPromise;
+}
+
+function googleButtonWidth(element) {
+  const available = element.parentElement?.clientWidth || 360;
+  return Math.max(240, Math.min(400, Math.floor(available)));
+}
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -18,72 +54,73 @@ export function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const googleBtnRef = useRef(null);
+  const onGoogleRef = useRef(() => {});
 
   const from = location.state?.from?.pathname || '/account';
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
-  // Initialize Google Identity Services
+  onGoogleRef.current = (response) => {
+    if (!response?.credential) return;
+    setIsLoading(true);
+    customerApi
+      .googleLogin(response.credential)
+      .then((res) => {
+        if (res.success && res.token && res.customer) {
+          customerLogin(res.token, res.customer);
+          success('Logged in with Google successfully!');
+          navigate(from, { replace: true });
+        }
+      })
+      .catch((err) => {
+        toastError(err.message || 'Google authentication failed.');
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
   useEffect(() => {
-    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '901315902348-89q3ktsetb31nlu8jblb8vutn2ma4e6d.apps.googleusercontent.com';
+    const host = googleBtnRef.current;
+    if (!host || !googleClientId) return undefined;
 
-    function handleGoogleCredentialResponse(response) {
-      if (response && response.credential) {
-        setIsLoading(true);
-        customerApi
-          .googleLogin(response.credential)
-          .then((res) => {
-            if (res.success && res.token && res.customer) {
-              customerLogin(res.token, res.customer);
-              success('Logged in with Google successfully!');
-              navigate(from, { replace: true });
-            }
-          })
-          .catch((err) => {
-            toastError(err.message || 'Google authentication failed.');
-          })
-          .finally(() => {
-            setIsLoading(false);
-          });
-      }
-    }
+    let cancelled = false;
+    let observer;
 
-    if (window.google?.accounts?.id && googleBtnRef.current) {
-      try {
-        window.google.accounts.id.initialize({
-          client_id: googleClientId,
-          callback: handleGoogleCredentialResponse,
-        });
-        window.google.accounts.id.renderButton(googleBtnRef.current, {
-          theme: 'outline',
-          size: 'large',
-          width: 380,
-          text: 'continue_with',
-        });
-      } catch (err) {
-        console.error('Google Sign-In initialization error:', err);
-      }
-    } else {
-      // If script is not yet loaded, load it dynamically
-      const script = document.createElement('script');
-      script.src = 'https://accounts.google.com/gsi/client';
-      script.async = true;
-      script.defer = true;
-      script.onload = () => {
-        if (window.google?.accounts?.id && googleBtnRef.current) {
+    const paint = () => {
+      if (cancelled || !host.isConnected || !window.google?.accounts?.id) return;
+      const width = googleButtonWidth(host);
+      if (host.dataset.buttonWidth === String(width) && host.childElementCount > 0) return;
+      host.dataset.buttonWidth = String(width);
+      host.replaceChildren();
+      window.google.accounts.id.renderButton(host, {
+        theme: 'outline',
+        size: 'large',
+        width,
+        text: 'continue_with',
+      });
+    };
+
+    loadGoogleScript()
+      .then(() => {
+        if (cancelled || !host.isConnected) return;
+        if (initializedGoogleClientId !== googleClientId) {
           window.google.accounts.id.initialize({
             client_id: googleClientId,
-            callback: handleGoogleCredentialResponse,
+            callback: (response) => onGoogleRef.current(response),
           });
-          window.google.accounts.id.renderButton(googleBtnRef.current, {
-            theme: 'outline',
-            size: 'large',
-            width: '100%',
-            text: 'continue_with',
-          });
+          initializedGoogleClientId = googleClientId;
         }
-      };
-      document.body.appendChild(script);
-    }
-  }, [customerLogin, from, navigate, success, toastError]);
+        paint();
+        observer = new ResizeObserver(paint);
+        if (host.parentElement) observer.observe(host.parentElement);
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+      observer?.disconnect();
+    };
+  }, [googleClientId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -116,17 +153,18 @@ export function LoginPage() {
   };
 
   return (
-    <div className="auth-page-container">
+    <div className="auth-page-container auth-has-video">
+      <AuthVideoBackground />
       <div className="auth-card">
+        <Link to="/" className="auth-close" aria-label="Back to home">
+          <X size={16} />
+        </Link>
         <div className="auth-header">
-          <Link to="/" className="brand-logo" style={{ justifyContent: 'center', marginBottom: '0.75rem' }}>
-            <Armchair size={32} />
+          <Link to="/" className="brand-logo" style={{ justifyContent: 'center', marginBottom: '0.45rem' }}>
+            <Armchair size={22} />
             <span>WOODCRAFT</span>
           </Link>
-          <h2>Customer Sign In</h2>
-          <p style={{ color: 'var(--neutral-500)', fontSize: '0.9rem', marginTop: 4 }}>
-            Sign in to access your orders, wishlist, and custom furniture designs.
-          </p>
+          <h2>Sign In</h2>
         </div>
 
         {formError && (

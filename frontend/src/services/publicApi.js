@@ -1,17 +1,48 @@
 import api from './api';
 
+let categoryCache = null;
+let categoryCachedAt = 0;
+let categoryRequest = null;
+let productsRequest = null;
+let offersRequest = null;
+const CATEGORY_CACHE_MS = 2 * 60 * 1000;
+
 export const publicApi = {
-  // Categories
-  getCategories: () => api.get('/api/public/categories'),
+  // Categories are shared by the header, home page, and filters.
+  getCategories: () => {
+    const fresh = categoryCache && Date.now() - categoryCachedAt < CATEGORY_CACHE_MS;
+    if (fresh) return Promise.resolve(categoryCache);
+    if (categoryRequest) return categoryRequest;
+
+    categoryRequest = api.get('/api/public/categories')
+      .then((res) => {
+        if (res?.success) {
+          categoryCache = res;
+          categoryCachedAt = Date.now();
+        }
+        return res;
+      })
+      .finally(() => {
+        categoryRequest = null;
+      });
+
+    return categoryRequest;
+  },
   getCategoryById: (id) => api.get(`/api/public/categories/${id}`),
 
   // Products
-  getProducts: () => api.get('/api/public/products'),
+  getProducts: () => {
+    if (productsRequest) return productsRequest;
+    productsRequest = api.get('/api/public/products').finally(() => {
+      productsRequest = null;
+    });
+    return productsRequest;
+  },
   getProductById: (id) => api.get(`/api/public/products/${id}`),
   getProductReviews: (productId) => api.get(`/api/public/products/${productId}/reviews`),
 
   // Search & Filter
-  filterProducts: (params = {}) => {
+  filterProducts: (params = {}, options = {}) => {
     const query = new URLSearchParams();
     if (params.search) query.append('search', params.search);
     if (params.category_id) query.append('category_id', params.category_id);
@@ -24,11 +55,17 @@ export const publicApi = {
     if (params.limit) query.append('limit', params.limit);
 
     const queryString = query.toString();
-    return api.get(`/api/public/product-filters${queryString ? `?${queryString}` : ''}`);
+    return api.get(`/api/public/product-filters${queryString ? `?${queryString}` : ''}`, options);
   },
 
   // Offers
-  getOffers: () => api.get('/api/public/offers'),
+  getOffers: () => {
+    if (offersRequest) return offersRequest;
+    offersRequest = api.get('/api/public/offers').finally(() => {
+      offersRequest = null;
+    });
+    return offersRequest;
+  },
   getOfferById: (id) => api.get(`/api/public/offers/${id}`),
 
   // Recommendations

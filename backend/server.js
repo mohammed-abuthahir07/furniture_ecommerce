@@ -38,12 +38,32 @@ const publicComparisonRoutes = require("./public/routes/comparisonRoutes");
 const customRequirementRoutes = require("./public/routes/customRequirementRoutes");
 const adminCustomRequirementRoutes = require("./admin/routes/customRequirementRoutes");
 
+const compression = require("compression");
+
 const app = express();
 
+app.use(compression());
 app.use(cors());
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use((req, res, next) => {
+  const sendJson = res.json.bind(res);
+  res.json = (body) => {
+    if (res.statusCode >= 500 && body && typeof body === "object" && !Array.isArray(body)) {
+      const message = String(body.message || "");
+      if (/sql|ER_|ECONN|syntax error|stack|at \w+\s+\(/i.test(message)) {
+        return sendJson({
+          ...body,
+          message: "Something went wrong on our side. Please try again in a moment.",
+        });
+      }
+    }
+    return sendJson(body);
+  };
+  next();
+});
 
 // PUBLIC
 app.use("/api/public/categories", publicCategoryRoutes);
@@ -84,6 +104,24 @@ app.use("/api/admin/notifications",notificationRoutes);
 app.use("/api/admin/settings",settingsRoutes);
 app.use("/api/admin/customization-requests", customizationRequestRoutes);
 app.use("/api/admin/custom-requirements",adminCustomRequirementRoutes);
+
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "The requested resource could not be found.",
+  });
+});
+
+app.use((error, req, res, next) => {
+  console.error("Unhandled server error:", error);
+  if (res.headersSent) {
+    return next(error);
+  }
+  return res.status(500).json({
+    success: false,
+    message: "Something went wrong on our side. Please try again in a moment.",
+  });
+});
 
 
 const PORT = process.env.PORT || 5000;

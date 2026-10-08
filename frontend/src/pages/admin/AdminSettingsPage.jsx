@@ -186,7 +186,7 @@ const AdminSettingsPage = () => {
 
       {/* Tab 1: Profile */}
       {activeTab === 'profile' && (
-        <div className="admin-card" style={{ maxWidth: '640px' }}>
+        <div className="admin-card" style={{ width: '100%' }}>
           <div className="admin-card-header">
             <h3 className="admin-card-title">Personal Credentials</h3>
           </div>
@@ -220,7 +220,7 @@ const AdminSettingsPage = () => {
 
       {/* Tab 2: Password */}
       {activeTab === 'password' && (
-        <div className="admin-card" style={{ maxWidth: '640px' }}>
+        <div className="admin-card" style={{ width: '100%' }}>
           <div className="admin-card-header">
             <h3 className="admin-card-title">Change Administrative Password</h3>
           </div>
@@ -266,7 +266,7 @@ const AdminSettingsPage = () => {
 
       {/* Tab 3: Store & Shipping */}
       {activeTab === 'store' && (
-        <div className="admin-card" style={{ maxWidth: '680px' }}>
+        <div className="admin-card" style={{ width: '100%' }}>
           <div className="admin-card-header">
             <h3 className="admin-card-title">Store Logistics & Dispatch Policies</h3>
           </div>

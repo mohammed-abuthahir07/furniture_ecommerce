@@ -34,7 +34,7 @@ export function AdminDataTable({
   return (
     <div className="admin-table-card">
       <div className="admin-table-toolbar">
-        <div style={{ position: 'relative', minWidth: '240px' }}>
+        <div className="admin-table-search">
           <Search size={16} style={{ position: 'absolute', left: 10, top: 11, color: '#94a3b8' }} />
           <input
             type="text"
@@ -72,7 +72,7 @@ export function AdminDataTable({
               {paginatedData.map((row, rIdx) => (
                 <tr key={row.id || rIdx}>
                   {columns.map((col, cIdx) => (
-                    <td key={cIdx} style={{ textAlign: col.align || 'left' }}>
+                    <td key={cIdx} data-label={col.header} style={{ textAlign: col.align || 'left' }}>
                       {col.render ? col.render(row) : row[col.accessor]}
                     </td>
                   ))}

@@ -81,7 +81,7 @@ export function CustomizationRequestDetailPage() {
     <div>
       <div style={{ marginBottom: '1.5rem' }}>
         <Link
-          to="/account/customization-requests"
+          to="/account/customizations"
           style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', color: 'var(--neutral-600)', marginBottom: '0.5rem' }}
         >
           <ArrowLeft size={14} /> Back to Custom Requests

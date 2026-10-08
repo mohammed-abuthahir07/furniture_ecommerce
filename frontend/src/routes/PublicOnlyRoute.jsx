@@ -7,7 +7,7 @@ export function PublicOnlyRoute({ children, redirectTo = '/account' }) {
   const { isCustomerAuthenticated, isCustomerLoading } = useAuth();
 
   if (isCustomerLoading) {
-    return <PageLoader text="Loading..." />;
+    return <PageLoader text="Opening sign in..." />;
   }
 
   if (isCustomerAuthenticated) {

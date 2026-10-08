@@ -103,7 +103,7 @@ export function CustomerLayout() {
                 </NavLink>
 
                 <NavLink
-                  to="/account/customization-requests"
+                  to="/account/customizations"
                   className={({ isActive }) => `account-nav-item ${isActive ? 'active' : ''}`}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

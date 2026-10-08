@@ -99,7 +99,7 @@ export function AccountDashboardPage() {
           </div>
         </Link>
 
-        <Link to="/account/customization-requests" className="surface-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <Link to="/account/customizations" className="surface-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-md)', background: 'var(--info-50)', color: 'var(--info-500)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <SlidersHorizontal size={22} />
           </div>
@@ -188,7 +188,7 @@ export function AccountDashboardPage() {
           <p style={{ fontSize: '0.85rem', color: 'var(--neutral-600)', marginBottom: '1rem' }}>
             Track design reviews, quotes, and craftsman responses for your customized furniture.
           </p>
-          <Link to="/account/customization-requests" className="btn btn-outline btn-sm">
+          <Link to="/account/customizations" className="btn btn-outline btn-sm">
             View Requests
           </Link>
         </div>

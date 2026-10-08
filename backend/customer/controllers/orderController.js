@@ -17,6 +17,7 @@ const {
 
 const { pool } = require("../../config/database");
 const { assertRazorpayPayment } = require("./paymentController");
+const { sendOrderConfirmationEmail } = require("../../utils/orderMail");
 
 
 /*
@@ -595,12 +596,24 @@ const placeOrder = async (req, res) => {
 
     await connection.commit();
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | Success Response
-    |--------------------------------------------------------------------------
-    */
+    sendOrderConfirmationEmail({
+      customerName: customer_name.trim(),
+      customerEmail: customer_email.trim(),
+      orderNumber: order.orderNumber,
+      items: cartItems,
+      subtotal,
+      discountAmount,
+      shippingCharge,
+      totalAmount,
+      paymentMethod: selectedPaymentMethod,
+      paymentStatus,
+      shippingAddress: shipping_address.trim(),
+      shippingCity: shipping_city.trim(),
+      shippingState: shipping_state.trim(),
+      shippingPincode: shipping_pincode.trim(),
+    }).catch((mailError) => {
+      console.error("Order confirmation email failed:", mailError.message);
+    });
 
     return res.status(201).json({
       success: true,
@@ -692,7 +705,6 @@ const placeOrder = async (req, res) => {
       success: false,
 
       message:
-        error.message ||
         "Failed to place order",
     });
 
@@ -1191,7 +1203,6 @@ const cancelMyOrder = async (
       success: false,
 
       message:
-        error.message ||
         "Failed to cancel order",
     });
 

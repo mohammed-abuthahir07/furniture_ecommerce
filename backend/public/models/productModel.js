@@ -32,32 +32,24 @@ const getActiveProducts = async () => {
         p.assembly_required,
         p.delivery_days,
 
-        /* Average rating */
-        COALESCE(
-          ROUND(
-            (
-              SELECT AVG(pr.rating)
-              FROM product_reviews pr
-              WHERE pr.product_id = p.id
-                AND pr.status = 'APPROVED'
-            ),
-            1
-          ),
-          0
-        ) AS average_rating,
-
-        /* Total approved reviews */
-        (
-          SELECT COUNT(*)
-          FROM product_reviews pr
-          WHERE pr.product_id = p.id
-            AND pr.status = 'APPROVED'
-        ) AS total_reviews
+        COALESCE(review_stats.average_rating, 0) AS average_rating,
+        COALESCE(review_stats.total_reviews, 0) AS total_reviews
 
       FROM products p
 
       INNER JOIN categories c
         ON c.id = p.category_id
+
+      LEFT JOIN (
+        SELECT
+          product_id,
+          ROUND(AVG(rating), 1) AS average_rating,
+          COUNT(*) AS total_reviews
+        FROM product_reviews
+        WHERE status = 'APPROVED'
+        GROUP BY product_id
+      ) review_stats
+        ON review_stats.product_id = p.id
 
       WHERE p.status = 'ACTIVE'
         AND c.status = 'ACTIVE'

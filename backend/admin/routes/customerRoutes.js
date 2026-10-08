@@ -4,6 +4,7 @@ const {
   getCustomers,
   getCustomer,
   changeCustomerStatus,
+  removeCustomer,
 } = require("../controllers/customerController");
 
 const adminAuthMiddleware = require("../../middleware/adminAuthMiddleware");
@@ -41,6 +42,13 @@ router.patch(
   "/:id/status",
   adminAuthMiddleware,
   changeCustomerStatus
+);
+
+
+router.delete(
+  "/:id",
+  adminAuthMiddleware,
+  removeCustomer
 );
 
 

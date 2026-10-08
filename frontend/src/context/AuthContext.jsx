@@ -24,7 +24,7 @@ export function AuthProvider({ children }) {
     }
 
     try {
-      const res = await customerApi.getAuthProfile();
+      const res = await customerApi.getProfile();
       if (res.success && res.customer) {
         setCustomer(res.customer);
       } else {

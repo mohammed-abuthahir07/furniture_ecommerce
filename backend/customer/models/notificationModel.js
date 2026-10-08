@@ -70,6 +70,7 @@ const getCustomerNotifications = async (customerId) => {
     FROM notifications
     WHERE customer_id = ?
     ORDER BY created_at DESC, id DESC
+    LIMIT 100
     `,
     [customerId]
   );
@@ -100,6 +101,7 @@ const getCustomerUnreadNotifications = async (customerId) => {
     WHERE customer_id = ?
       AND is_read = 0
     ORDER BY created_at DESC, id DESC
+    LIMIT 100
     `,
     [customerId]
   );

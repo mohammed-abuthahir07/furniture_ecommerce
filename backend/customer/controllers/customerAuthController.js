@@ -330,13 +330,20 @@ const loginCustomer = async (req, res) => {
 
     delete customer.password;
 
-
     return res.status(200).json({
       success: true,
       message:
         "Customer login successful",
       token,
-      customer
+      customer: {
+        id: customer.id,
+        name: customer.name,
+        email: customer.email,
+        phone: customer.phone,
+        profile_image: customer.profile_image || null,
+        status: customer.status,
+        created_at: customer.created_at,
+      }
     });
 
   } catch (error) {
@@ -665,7 +672,15 @@ const getCustomerProfile = async (req, res) => {
       success: true,
       message:
         "Customer profile fetched successfully",
-      customer
+      customer: {
+        id: customer.id,
+        name: customer.name,
+        email: customer.email,
+        phone: customer.phone,
+        profile_image: customer.profile_image || null,
+        status: customer.status,
+        created_at: customer.created_at,
+      }
     });
 
   } catch (error) {

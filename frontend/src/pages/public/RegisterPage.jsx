@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { UserPlus, Armchair, ShieldCheck } from 'lucide-react';
+import { UserPlus, Armchair, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import customerApi from '../../services/customerApi';
 import InputField from '../../components/forms/InputField';
 import { useToast } from '../../context/ToastContext';
 import { isValidEmail, isValidPassword } from '../../utils/validators';
+import AuthVideoBackground from '../../components/common/AuthVideoBackground';
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -83,17 +84,18 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="auth-page-container">
-      <div className="auth-card" style={{ maxWidth: '520px' }}>
+    <div className="auth-page-container auth-has-video">
+      <AuthVideoBackground />
+      <div className="auth-card">
+        <Link to="/" className="auth-close" aria-label="Back to home">
+          <X size={16} />
+        </Link>
         <div className="auth-header">
-          <Link to="/" className="brand-logo" style={{ justifyContent: 'center', marginBottom: '0.75rem' }}>
-            <Armchair size={32} />
+          <Link to="/" className="brand-logo" style={{ justifyContent: 'center', marginBottom: '0.45rem' }}>
+            <Armchair size={22} />
             <span>WOODCRAFT</span>
           </Link>
-          <h2>Create Your Account</h2>
-          <p style={{ color: 'var(--neutral-500)', fontSize: '0.9rem', marginTop: 4 }}>
-            Join WoodCraft Studio for exclusive collections and custom orders.
-          </p>
+          <h2>Create Account</h2>
         </div>
 
         {formError && (

@@ -31,8 +31,15 @@ export function MyProfilePage() {
       return;
     }
 
+    const trimmedPhone = phone.trim();
+    if (trimmedPhone && !/^[0-9+\-\s()]{7,20}$/.test(trimmedPhone)) {
+      toastError('Please provide a valid phone number.');
+      return;
+    }
+
     const payload = new FormData();
     payload.append('name', name.trim());
+    payload.append('phone', trimmedPhone);
     if (profileImageFile) {
       payload.append('profile_image', profileImageFile);
     }
@@ -118,9 +125,13 @@ export function MyProfilePage() {
 
         <InputField
           label="Phone Number"
+          type="tel"
+          name="phone"
           value={phone}
-          disabled
-          hint="Phone number registered with your account."
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder="Enter your phone number"
+          autoComplete="tel"
+          hint="You can update the phone number on this account."
         />
 
         <FileUploadField

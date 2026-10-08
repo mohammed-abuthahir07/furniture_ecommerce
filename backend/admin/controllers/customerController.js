@@ -3,6 +3,7 @@ const {
   getCustomerById,
   updateCustomerStatus,
   getCustomerOrders,
+  deleteCustomerAccount,
 } = require("../models/customerModel");
 
 
@@ -165,9 +166,47 @@ const getCustomerOrderHistory = async (req, res) => {
 };
 
 
+const removeCustomer = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id || isNaN(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Valid customer ID is required",
+      });
+    }
+
+    const customer = await getCustomerById(id);
+
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: "Customer not found",
+      });
+    }
+
+    await deleteCustomerAccount(id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Customer and their orders, reviews, and payments were deleted",
+    });
+  } catch (error) {
+    console.error("Delete customer error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete customer",
+    });
+  }
+};
+
+
 module.exports = {
   getCustomers,
   getCustomer,
   changeCustomerStatus,
   getCustomerOrderHistory,
+  removeCustomer,
 };

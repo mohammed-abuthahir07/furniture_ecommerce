@@ -22,7 +22,7 @@ import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import publicApi from '../../services/publicApi';
 import customerApi from '../../services/customerApi';
-import { getImageUrl, handleImageError } from '../../utils/imageUrl';
+import { getImageUrl, handleImageError, FALLBACK_USER_IMAGE } from '../../utils/imageUrl';
 
 export function Header() {
   const navigate = useNavigate();
@@ -62,7 +62,7 @@ export function Header() {
     } else {
       setUnreadNotificationsCount(0);
     }
-  }, [isCustomerAuthenticated, location.pathname]);
+  }, [isCustomerAuthenticated, location.pathname === '/account/notifications']);
 
   // Close menus on route change
   useEffect(() => {
@@ -102,19 +102,27 @@ export function Header() {
       return undefined;
     }
 
+    const controller = new AbortController();
     const timer = setTimeout(async () => {
       try {
-        const res = await publicApi.filterProducts({ search: query, limit: 6 });
+        const res = await publicApi.filterProducts(
+          { search: query, limit: 6 },
+          { signal: controller.signal }
+        );
         const apiItems = res.success && Array.isArray(res.data) ? res.data : [];
         setSuggestions(apiItems);
         setSuggestOpen(true);
-      } catch {
+      } catch (error) {
+        if (error.name === 'AbortError') return;
         setSuggestions([]);
         setSuggestOpen(true);
       }
     }, 280);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [searchQuery]);
 
   useEffect(() => {
@@ -286,7 +294,12 @@ export function Header() {
               </Link>
 
               {/* Cart */}
-              <Link to="/cart" className="action-icon-btn" aria-label="Cart">
+              <Link
+                to={isCustomerAuthenticated ? '/cart' : '/login'}
+                state={isCustomerAuthenticated ? undefined : { from: { pathname: '/cart' } }}
+                className="action-icon-btn"
+                aria-label="Cart"
+              >
                 <ShoppingBag size={20} />
                 {totalItems > 0 && <span className="action-badge">{totalItems}</span>}
               </Link>
@@ -308,16 +321,25 @@ export function Header() {
                 <div className="user-menu-wrapper" ref={userMenuRef}>
                   <button
                     type="button"
-                    className="btn btn-secondary btn-sm"
-                    style={{ borderRadius: 'var(--radius-full)', padding: '0.4rem 0.85rem' }}
+                    className="btn btn-secondary btn-sm header-account-btn"
                     onClick={() => setIsUserMenuOpen((prev) => !prev)}
                     aria-expanded={isUserMenuOpen}
                   >
-                    <User size={16} />
-                    <span style={{ maxWidth: '90px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <span className="header-account-avatar">
+                      {customer?.profile_image ? (
+                        <img
+                          src={getImageUrl(customer.profile_image, FALLBACK_USER_IMAGE)}
+                          alt=""
+                          onError={(event) => handleImageError(event, FALLBACK_USER_IMAGE)}
+                        />
+                      ) : (
+                        customer?.name?.charAt(0)?.toUpperCase() || <User size={14} />
+                      )}
+                    </span>
+                    <span className="header-account-name">
                       {customer?.name?.split(' ')[0] || 'Account'}
                     </span>
-                    <ChevronDown size={14} />
+                    <ChevronDown className="header-account-chevron" size={14} />
                   </button>
 
                   {isUserMenuOpen && (
@@ -332,7 +354,7 @@ export function Header() {
                       <Link to="/account/orders" className="user-dropdown-item">
                         <Package size={16} /> My Orders
                       </Link>
-                      <Link to="/account/customization-requests" className="user-dropdown-item">
+                      <Link to="/account/customizations" className="user-dropdown-item">
                         <SlidersHorizontal size={16} /> Customization Requests
                       </Link>
                       <Link to="/account/profile" className="user-dropdown-item">
@@ -433,7 +455,12 @@ export function Header() {
               <Link to="/offers" className="header-nav-link" style={{ fontSize: '1rem', padding: '0.5rem 0' }}>
                 Offers & Deals
               </Link>
-              <Link to="/cart" className="header-nav-link" style={{ fontSize: '1rem', padding: '0.5rem 0' }}>
+              <Link
+                to={isCustomerAuthenticated ? '/cart' : '/login'}
+                state={isCustomerAuthenticated ? undefined : { from: { pathname: '/cart' } }}
+                className="header-nav-link"
+                style={{ fontSize: '1rem', padding: '0.5rem 0' }}
+              >
                 Cart{totalItems > 0 ? ` (${totalItems})` : ''}
               </Link>
               <Link to="/wishlist" className="header-nav-link" style={{ fontSize: '1rem', padding: '0.5rem 0' }}>
