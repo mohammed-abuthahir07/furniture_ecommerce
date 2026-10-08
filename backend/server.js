@@ -36,6 +36,7 @@ const publicRecommendationRoutes = require("./public/routes/recommendationRoutes
 const publicHomeRoutes = require("./public/routes/homeRoutes");
 const publicComparisonRoutes = require("./public/routes/comparisonRoutes");
 const customRequirementRoutes = require("./public/routes/customRequirementRoutes");
+const adminCustomRequirementRoutes = require("./admin/routes/customRequirementRoutes");
 
 const app = express();
 
@@ -82,8 +83,7 @@ app.use("/api/admin/analytics", analyticsRoutes);
 app.use("/api/admin/notifications",notificationRoutes);
 app.use("/api/admin/settings",settingsRoutes);
 app.use("/api/admin/customization-requests", customizationRequestRoutes);
-
-
+app.use("/api/admin/custom-requirements",adminCustomRequirementRoutes);
 
 
 const PORT = process.env.PORT || 5000;
