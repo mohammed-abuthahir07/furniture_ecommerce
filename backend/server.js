@@ -33,7 +33,6 @@ const publicProductRoutes = require("./public/routes/productRoutes");
 const publicProductFilterRoutes = require("./public/routes/productFilterRoutes");
 const publicOfferRoutes = require( "./public/routes/offerRoutes");
 const publicRecommendationRoutes = require("./public/routes/recommendationRoutes");
-const publicHomeRoutes = require("./public/routes/homeRoutes");
 const publicComparisonRoutes = require("./public/routes/comparisonRoutes");
 const customRequirementRoutes = require("./public/routes/customRequirementRoutes");
 const adminCustomRequirementRoutes = require("./admin/routes/customRequirementRoutes");
@@ -52,7 +51,6 @@ app.use("/api/public/products", publicProductRoutes);
 app.use("/api/public/product-filters",publicProductFilterRoutes);
 app.use("/api/public/offers",publicOfferRoutes);
 app.use("/api/public/recommendations",publicRecommendationRoutes);
-app.use("/api/public/home", publicHomeRoutes);
 app.use("/api/public/products/compare",publicComparisonRoutes);
 app.use("/api/public/custom-requirements",customRequirementRoutes);
 

@@ -1,0 +1,79 @@
+:root {
+  /* Brand Furniture Colors */
+  --primary-50: #fbf7f4;
+  --primary-100: #f5ebe2;
+  --primary-200: #e8d3c1;
+  --primary-300: #d6b399;
+  --primary-400: #be8e6e;
+  --primary-500: #a46d49; /* Warm Artisan Oak / Walnut */
+  --primary-600: #895337;
+  --primary-700: #6f3f2a;
+  --primary-800: #553020;
+  --primary-900: #3b2014;
+  --primary-950: #23120b;
+
+  /* Neutral tones */
+  --neutral-0: #ffffff;
+  --neutral-50: #faf9f7;
+  --neutral-100: #f3f2ee;
+  --neutral-200: #e6e4de;
+  --neutral-300: #d2cfc6;
+  --neutral-400: #a7a296;
+  --neutral-500: #787367;
+  --neutral-600: #57534b;
+  --neutral-700: #3d3a33;
+  --neutral-800: #24221d;
+  --neutral-900: #141310;
+
+  /* Accent & Status Colors */
+  --accent-amber: #c88a2a;
+  --accent-amber-light: #fdf5e8;
+  --accent-olive: #5b7553;
+  --accent-olive-light: #eef4ed;
+  
+  --success-500: #1b7a4b;
+  --success-50: #edf7f0;
+  --warning-500: #b46b0a;
+  --warning-50: #fef7ed;
+  --danger-500: #b92b27;
+  --danger-50: #fdf2f2;
+  --info-500: #2b6cb0;
+  --info-50: #ebf4ff;
+
+  /* Admin Navy / Slate Palette */
+  --admin-sidebar-bg: #1a1e29;
+  --admin-sidebar-hover: #262c3b;
+  --admin-sidebar-active: #a46d49;
+  --admin-sidebar-text: #a0aec0;
+  --admin-sidebar-text-active: #ffffff;
+
+  /* Typography */
+  --font-heading: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  
+  /* Radii */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* Elevation / Shadows */
+  --shadow-xs: 0 1px 2px rgba(20, 19, 16, 0.04);
+  --shadow-sm: 0 2px 5px rgba(20, 19, 16, 0.06), 0 1px 2px rgba(20, 19, 16, 0.04);
+  --shadow-md: 0 4px 12px rgba(20, 19, 16, 0.08), 0 2px 4px rgba(20, 19, 16, 0.04);
+  --shadow-lg: 0 12px 28px rgba(20, 19, 16, 0.1), 0 4px 8px rgba(20, 19, 16, 0.05);
+  --shadow-xl: 0 20px 40px rgba(20, 19, 16, 0.14), 0 8px 16px rgba(20, 19, 16, 0.06);
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Layout */
+  --container-max-width: 1320px;
+  --header-height: 80px;
+  --header-height-mobile: 64px;
+  --topbar-banner-height: 36px;
+}
