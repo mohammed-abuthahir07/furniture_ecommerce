@@ -35,6 +35,7 @@ const publicOfferRoutes = require( "./public/routes/offerRoutes");
 const publicRecommendationRoutes = require("./public/routes/recommendationRoutes");
 const publicHomeRoutes = require("./public/routes/homeRoutes");
 const publicComparisonRoutes = require("./public/routes/comparisonRoutes");
+const customRequirementRoutes = require("./public/routes/customRequirementRoutes");
 
 const app = express();
 
@@ -52,6 +53,7 @@ app.use("/api/public/offers",publicOfferRoutes);
 app.use("/api/public/recommendations",publicRecommendationRoutes);
 app.use("/api/public/home", publicHomeRoutes);
 app.use("/api/public/products/compare",publicComparisonRoutes);
+app.use("/api/public/custom-requirements",customRequirementRoutes);
 
 // CUSTOMER
 app.use("/api/customer/auth",customerAuthRoutes);
