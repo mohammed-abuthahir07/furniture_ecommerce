@@ -3,7 +3,16 @@
  * Manages authorization headers, multipart uploads, and unified error handling.
  */
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+/**
+ * In development, requests stay on the Vite origin so the /api proxy
+ * and /uploads middleware can serve the backend without cross-origin cookies.
+ * Production uses VITE_API_BASE_URL.
+ */
+export const API_BASE_URL = import.meta.env.DEV
+  ? ''
+  : (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000');
+
+const BASE_URL = API_BASE_URL;
 
 export const CUSTOMER_TOKEN_KEY = 'furniture_customer_token';
 export const ADMIN_TOKEN_KEY = 'furniture_admin_token';

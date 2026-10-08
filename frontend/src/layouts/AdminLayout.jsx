@@ -34,7 +34,6 @@ export function AdminLayout() {
       {isSidebarOpen && (
         <div
           className="drawer-overlay"
-          style={{ zIndex: 99 }}
           onClick={() => setIsSidebarOpen(false)}
         />
       )}

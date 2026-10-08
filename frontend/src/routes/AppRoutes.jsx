@@ -24,6 +24,7 @@ import LoginPage from '../pages/public/LoginPage';
 import RegisterPage from '../pages/public/RegisterPage';
 import ForgotPasswordPage from '../pages/public/ForgotPasswordPage';
 import NotFoundPage from '../pages/public/NotFoundPage';
+import StorePolicyPage from '../pages/public/StorePolicyPage';
 
 // Customer Pages
 import AccountDashboardPage from '../pages/customer/AccountDashboardPage';
@@ -71,6 +72,9 @@ const AppRoutes = () => {
         <Route path="/offers" element={<OffersPage />} />
         <Route path="/compare" element={<ProductComparisonPage />} />
         <Route path="/custom-requirement" element={<CustomRequirementPage />} />
+        <Route path="/privacy" element={<StorePolicyPage />} />
+        <Route path="/terms" element={<StorePolicyPage />} />
+        <Route path="/shipping" element={<StorePolicyPage />} />
         
         {/* Cart is publicly viewable */}
         <Route path="/cart" element={<CartPage />} />

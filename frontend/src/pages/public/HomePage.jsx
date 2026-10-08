@@ -17,11 +17,17 @@ import { ErrorState } from '../../components/common/ErrorState';
 import { EmptyState } from '../../components/common/EmptyState';
 import { getImageUrl, handleImageError } from '../../utils/imageUrl';
 
+const ROOM_COLLECTIONS = [
+  { name: 'Living Room', query: 'sofa', note: 'Sofas, lounge chairs, and coffee tables' },
+  { name: 'Dining Room', query: 'dining', note: 'Tables sized for everyday meals' },
+  { name: 'Bedroom', query: 'bed', note: 'Beds and wardrobes in solid timber' },
+  { name: 'Home Office', query: 'desk', note: 'Desks and shelves for quiet work' },
+];
+
 export function HomePage() {
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [offers, setOffers] = useState([]);
-  const [recommendations, setRecommendations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -29,11 +35,10 @@ export function HomePage() {
     setIsLoading(true);
     setError(null);
     try {
-      const [catRes, prodRes, offRes, recRes] = await Promise.allSettled([
+      const [catRes, prodRes, offRes] = await Promise.allSettled([
         publicApi.getCategories(),
         publicApi.getProducts(),
         publicApi.getOffers(),
-        publicApi.getRecommendations(undefined, 4),
       ]);
 
       if (catRes.status === 'fulfilled' && catRes.value.success) {
@@ -44,9 +49,6 @@ export function HomePage() {
       }
       if (offRes.status === 'fulfilled' && offRes.value.success) {
         setOffers(offRes.value.data || []);
-      }
-      if (recRes.status === 'fulfilled' && recRes.value.success) {
-        setRecommendations(recRes.value.data || []);
       }
     } catch (err) {
       setError(err.message || 'Failed to load home page.');
@@ -60,13 +62,12 @@ export function HomePage() {
   }, []);
 
   // Filter sections dynamically from real backend products
-  const featuredProducts = products.slice(0, 4);
-  const topRatedProducts = [...products]
+  const catalog = products;
+  const featuredProducts = catalog.slice(0, 4);
+  const topRatedProducts = [...catalog]
     .sort((a, b) => Number(b.average_rating || 0) - Number(a.average_rating || 0))
     .slice(0, 4);
-  const newArrivals = [...products]
-    .sort((a, b) => Number(b.id) - Number(a.id))
-    .slice(0, 4);
+  const newArrivals = catalog.slice(4, 8);
 
   return (
     <div>
@@ -157,6 +158,24 @@ export function HomePage() {
           </div>
         </div>
       </div>
+
+      <section className="container home-block">
+        <div className="section-header">
+          <div>
+            <h2>Shop by Room</h2>
+            <p className="section-subtitle">Living, dining, bedroom, and office pieces in solid timber</p>
+          </div>
+        </div>
+        <div className="room-grid">
+          {ROOM_COLLECTIONS.map((room) => (
+            <Link key={room.name} to={`/products?search=${encodeURIComponent(room.query)}`} className="room-card">
+              <h3>{room.name}</h3>
+              <p>{room.note}</p>
+              <span>Browse pieces <ArrowRight size={14} /></span>
+            </Link>
+          ))}
+        </div>
+      </section>
 
       {error && (
         <div className="container" style={{ margin: '2rem auto' }}>
@@ -312,6 +331,87 @@ export function HomePage() {
           </div>
         </section>
       )}
+
+      <section className="container home-block">
+        <div className="section-header">
+          <div>
+            <h2>Timber We Build With</h2>
+            <p className="section-subtitle">Seasoned hardwoods chosen for grain, strength, and how they age in a home</p>
+          </div>
+        </div>
+        <div className="wood-grid">
+          <article className="surface-card">
+            <h3>Sheesham</h3>
+            <p>Indian rosewood with a tight grain. Used for sofas, coffee tables, and living-room storage that takes daily use.</p>
+          </article>
+          <article className="surface-card">
+            <h3>Teak</h3>
+            <p>Naturally oily timber for dining tables and bookshelves. It holds a finish and resists the humidity of a family room.</p>
+          </article>
+          <article className="surface-card">
+            <h3>Oak</h3>
+            <p>Pale, straight grain for beds and lounge chairs. Strong enough for a king frame and light enough to keep a bedroom calm.</p>
+          </article>
+          <article className="surface-card">
+            <h3>Walnut</h3>
+            <p>A darker studio wood for desks and wardrobes. The color deepens slowly and suits a home office or dressing wall.</p>
+          </article>
+        </div>
+      </section>
+
+      <section className="container home-block">
+        <div className="section-header">
+          <div>
+            <h2>From Workshop to Your Room</h2>
+            <p className="section-subtitle">How a WoodCraft piece is made, finished, and delivered</p>
+          </div>
+        </div>
+        <ol className="craft-steps">
+          <li>
+            <strong>Timber selection</strong>
+            <span>Boards are checked for moisture, cracks, and matching grain before a frame is cut.</span>
+          </li>
+          <li>
+            <strong>Joinery and finish</strong>
+            <span>Seats, tops, and carcasses are assembled, sanded, and finished so the wood can still be felt.</span>
+          </li>
+          <li>
+            <strong>White-glove delivery</strong>
+            <span>Large pieces are scheduled for room-of-choice delivery. Assembly is noted on every product.</span>
+          </li>
+          <li>
+            <strong>Aftercare</strong>
+            <span>A 10-year structural warranty covers the timber frame. Custom sizes are quoted before they are built.</span>
+          </li>
+        </ol>
+      </section>
+
+      <section className="container home-block">
+        <div className="section-header">
+          <div>
+            <h2>Before You Order</h2>
+            <p className="section-subtitle">Practical details for solid-wood furniture</p>
+          </div>
+        </div>
+        <div className="faq-grid">
+          <article>
+            <h3>Will the grain match the photo?</h3>
+            <p>Solid timber varies. Tone and grain shift from board to board. That variation is part of the material, not a defect.</p>
+          </article>
+          <article>
+            <h3>How long does delivery take?</h3>
+            <p>Each piece lists its delivery window. Dining sets and wardrobes usually need more time than a chair or a coffee table.</p>
+          </article>
+          <article>
+            <h3>Do I need to assemble it?</h3>
+            <p>The product page says whether assembly is required. Beds and wardrobes are usually assembled in the room.</p>
+          </article>
+          <article>
+            <h3>Can I change the size?</h3>
+            <p>Yes. Send room measurements through the custom studio. A quote includes timber, finish, and lead time.</p>
+          </article>
+        </div>
+      </section>
 
       {/* Custom Requirement CTA Banner */}
       <section className="container" style={{ marginBottom: '5rem' }}>

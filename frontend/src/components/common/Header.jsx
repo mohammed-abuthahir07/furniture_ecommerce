@@ -22,6 +22,7 @@ import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import publicApi from '../../services/publicApi';
 import customerApi from '../../services/customerApi';
+import { getImageUrl, handleImageError } from '../../utils/imageUrl';
 
 export function Header() {
   const navigate = useNavigate();
@@ -33,9 +34,12 @@ export function Header() {
   const [categories, setCategories] = useState([]);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [suggestOpen, setSuggestOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
+  const searchWrapRef = useRef(null);
 
   // Fetch active categories for sub-navigation
   useEffect(() => {
@@ -50,8 +54,9 @@ export function Header() {
   useEffect(() => {
     if (isCustomerAuthenticated) {
       customerApi.getUnreadCount().then((res) => {
-        if (res.success && res.unread_count !== undefined) {
-          setUnreadNotificationsCount(res.unread_count);
+        const count = res.data?.unread_count ?? res.unread_count;
+        if (res.success && count !== undefined) {
+          setUnreadNotificationsCount(count);
         }
       }).catch(() => {});
     } else {
@@ -65,6 +70,19 @@ export function Header() {
     setIsUserMenuOpen(false);
   }, [location.pathname]);
 
+  useEffect(() => {
+    if (!isMobileMenuOpen) return undefined;
+    const onKey = (event) => {
+      if (event.key === 'Escape') setIsMobileMenuOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [isMobileMenuOpen]);
+
   // Handle outside click for user dropdown
   useEffect(() => {
     function handleClickOutside(e) {
@@ -76,12 +94,86 @@ export function Header() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    const query = searchQuery.trim();
+    if (query.length < 1) {
+      setSuggestions([]);
+      setSuggestOpen(false);
+      return undefined;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await publicApi.filterProducts({ search: query, limit: 6 });
+        const apiItems = res.success && Array.isArray(res.data) ? res.data : [];
+        setSuggestions(apiItems);
+        setSuggestOpen(true);
+      } catch {
+        setSuggestions([]);
+        setSuggestOpen(true);
+      }
+    }, 280);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (event.target.closest('.header-search') || event.target.closest('.mobile-search-wrap')) return;
+      setSuggestOpen(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
-    }
+    const query = searchQuery.trim();
+    if (!query) return;
+    setSuggestOpen(false);
+    setIsMobileMenuOpen(false);
+    navigate(`/products?search=${encodeURIComponent(query)}`);
   };
+
+  const openSuggestion = (item) => {
+    setSuggestOpen(false);
+    setIsMobileMenuOpen(false);
+    setSearchQuery(item.name || '');
+    navigate(`/products/${item.id}`);
+  };
+
+  const suggestionList = suggestOpen && searchQuery.trim() && (
+    <div className="search-suggest" role="listbox" aria-label="Furniture search results">
+      {suggestions.length === 0 ? (
+        <p className="search-suggest-empty">No furniture matches that search.</p>
+      ) : (
+        suggestions.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className="search-suggest-item"
+            onClick={() => openSuggestion(item)}
+          >
+            <img
+              src={getImageUrl(item.main_image)}
+              alt=""
+              onError={handleImageError}
+            />
+            <span>
+              <strong>{item.name}</strong>
+              <small>
+                {[item.category_name, item.wood_type].filter(Boolean).join(' · ')}
+              </small>
+            </span>
+            <em>₹{Number(item.selling_price || 0).toLocaleString('en-IN')}</em>
+          </button>
+        ))
+      )}
+      <button type="submit" className="search-suggest-all">
+        See all results for “{searchQuery.trim()}”
+      </button>
+    </div>
+  );
 
   return (
     <>
@@ -164,16 +256,24 @@ export function Header() {
             </nav>
 
             {/* Search Bar */}
-            <div className="header-search">
+            <div className="header-search" ref={searchWrapRef}>
               <form onSubmit={handleSearchSubmit}>
                 <Search size={18} className="search-icon" />
                 <input
                   type="text"
                   placeholder="Search sofas, beds, dining tables..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setSuggestOpen(true);
+                  }}
+                  onFocus={() => {
+                    if (searchQuery.trim()) setSuggestOpen(true);
+                  }}
                   aria-label="Search products"
+                  aria-autocomplete="list"
                 />
+                {suggestionList}
               </form>
             </div>
 
@@ -186,7 +286,7 @@ export function Header() {
               </Link>
 
               {/* Cart */}
-              <Link to="/account/cart" className="action-icon-btn" aria-label="Cart">
+              <Link to="/cart" className="action-icon-btn" aria-label="Cart">
                 <ShoppingBag size={20} />
                 {totalItems > 0 && <span className="action-badge">{totalItems}</span>}
               </Link>
@@ -301,18 +401,23 @@ export function Header() {
             </div>
 
             {/* Mobile Search input */}
-            <form onSubmit={handleSearchSubmit} style={{ marginBottom: '1.5rem' }}>
+            <form onSubmit={handleSearchSubmit} className="mobile-search-wrap" style={{ marginBottom: '1.5rem', position: 'relative' }}>
               <div style={{ position: 'relative' }}>
                 <Search size={16} style={{ position: 'absolute', left: 10, top: 12, color: 'var(--neutral-400)' }} />
                 <input
                   type="text"
-                  placeholder="Search furniture..."
+                  placeholder="Search sofas, beds, dining tables..."
                   className="form-input"
                   style={{ paddingLeft: '2.2rem', fontSize: '0.9rem' }}
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setSuggestOpen(true);
+                  }}
+                  aria-label="Search products"
                 />
               </div>
+              {suggestionList}
             </form>
 
             <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '2rem' }}>
@@ -327,6 +432,12 @@ export function Header() {
               </Link>
               <Link to="/offers" className="header-nav-link" style={{ fontSize: '1rem', padding: '0.5rem 0' }}>
                 Offers & Deals
+              </Link>
+              <Link to="/cart" className="header-nav-link" style={{ fontSize: '1rem', padding: '0.5rem 0' }}>
+                Cart{totalItems > 0 ? ` (${totalItems})` : ''}
+              </Link>
+              <Link to="/wishlist" className="header-nav-link" style={{ fontSize: '1rem', padding: '0.5rem 0' }}>
+                Wishlist{wishlistCount > 0 ? ` (${wishlistCount})` : ''}
               </Link>
               <Link to="/compare" className="header-nav-link" style={{ fontSize: '1rem', padding: '0.5rem 0' }}>
                 Compare Furniture

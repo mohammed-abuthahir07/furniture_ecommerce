@@ -26,6 +26,7 @@ const publicReviewRoutes = require("./public/routes/publicReviewRoutes");
 const cartRoutes = require("./customer/routes/cartRoutes");
 const customizationRequestRoutes1 =require("./customer/routes/customizationRequestRoutes");
 const orderRoutes1 = require("./customer/routes/orderRoutes");
+const paymentRoutes = require("./customer/routes/paymentRoutes");
 const notificationRoutes1 = require("./customer/routes/notificationRoutes");
 const forgotPasswordRoutes = require("./customer/routes/forgotPasswordRoutes")
 const publicCategoryRoutes = require("./public/routes/categoryRoutes");
@@ -62,6 +63,7 @@ app.use("/api/customer/cart",cartRoutes);
 app.use("/api/customer/customization-requests",customizationRequestRoutes1);
 app.use("/api/customer/wishlist", wishlistRoutes);
 app.use("/api/customer/orders",orderRoutes1);
+app.use("/api/customer/payments", paymentRoutes);
 app.use("/api/customer/notifications",notificationRoutes1);
 app.use("/api/customer/auth",forgotPasswordRoutes);
 

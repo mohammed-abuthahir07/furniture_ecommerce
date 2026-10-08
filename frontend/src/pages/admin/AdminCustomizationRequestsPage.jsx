@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 
 const AdminCustomizationRequestsPage = () => {
-  const { showSuccess, showError } = useToast();
+  const { success: showSuccess, error: showError } = useToast();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -43,21 +43,16 @@ const AdminCustomizationRequestsPage = () => {
   const fetchRequests = async () => {
     try {
       setLoading(true);
-      const res = await adminApi.getCustomizationRequests({
-        page,
-        limit: 15,
-        status: statusFilter || undefined
-      });
+      const res = statusFilter
+        ? await adminApi.getCustomizationRequestsByStatus(statusFilter)
+        : await adminApi.getAllCustomizationRequests();
 
-      if (res.data?.success) {
-        const data = res.data.data;
-        setRequests(data.requests || data.customizations || (Array.isArray(data) ? data : []));
-        if (data.pagination) {
-          setTotalPages(data.pagination.totalPages || 1);
-        }
+      if (res.success) {
+        setRequests(res.requests || []);
+        setTotalPages(1);
       }
     } catch (err) {
-      showError(err.response?.data?.message || 'Failed to load customization requests');
+      showError(err.message || 'Failed to load customization requests');
     } finally {
       setLoading(false);
     }
@@ -85,20 +80,22 @@ const AdminCustomizationRequestsPage = () => {
 
     try {
       setSubmittingReply(true);
+      if (nextStatus && nextStatus !== selectedReq.status && nextStatus !== 'ADMIN_REPLIED') {
+        await adminApi.updateCustomizationStatus(selectedReq.id, nextStatus);
+      }
+
       const res = await adminApi.replyCustomizationRequest(selectedReq.id, {
-        reply_message: replyMessage,
-        admin_quote_price: quotePrice ? Number(quotePrice) : undefined,
-        estimated_days: estimatedDays ? Number(estimatedDays) : undefined,
-        status: nextStatus
+        admin_reply: replyMessage.trim(),
+        additional_cost: quotePrice === '' ? 0 : Number(quotePrice),
       });
 
-      if (res.data?.success) {
-        showSuccess('Customization reply and quote updated successfully');
+      if (res.success) {
+        showSuccess(res.message || 'Customization reply sent successfully');
         setDetailModalOpen(false);
         fetchRequests();
       }
     } catch (err) {
-      showError(err.response?.data?.message || 'Failed to send customization reply');
+      showError(err.message || 'Failed to send customization reply');
     } finally {
       setSubmittingReply(false);
     }

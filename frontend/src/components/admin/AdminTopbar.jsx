@@ -27,8 +27,7 @@ export function AdminTopbar({ onToggleSidebar, pageTitle = 'Dashboard' }) {
       <div className="admin-topbar-left">
         <button
           type="button"
-          className="mobile-menu-btn"
-          style={{ display: 'inline-flex' }}
+          className="mobile-menu-btn admin-menu-toggle"
           onClick={onToggleSidebar}
           aria-label="Toggle admin navigation"
         >
@@ -45,7 +44,7 @@ export function AdminTopbar({ onToggleSidebar, pageTitle = 'Dashboard' }) {
           style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
           title="Open Public Furniture Store"
         >
-          <span>Storefront</span>
+          <span className="storefront-label">Storefront</span>
           <ExternalLink size={14} />
         </Link>
 
@@ -63,7 +62,7 @@ export function AdminTopbar({ onToggleSidebar, pageTitle = 'Dashboard' }) {
         </Link>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingLeft: 10, borderLeft: '1px solid #e2e8f0' }}>
-          <div style={{ textAlign: 'right' }}>
+          <div className="admin-user-meta" style={{ textAlign: 'right' }}>
             <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a' }}>
               {admin?.name || 'Admin'}
             </div>

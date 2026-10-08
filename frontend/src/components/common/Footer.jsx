@@ -39,10 +39,10 @@ export function Footer() {
           <div className="footer-col">
             <h4>Furniture Categories</h4>
             <ul className="footer-links">
-              <li><Link to="/products?material=Sheesham+Wood">Sheesham Living</Link></li>
-              <li><Link to="/products?material=Teak+Wood">Teak Dining Sets</Link></li>
-              <li><Link to="/products?material=Oak+Wood">Solid Oak Bedroom</Link></li>
-              <li><Link to="/products?material=Walnut">Walnut Office & Storage</Link></li>
+              <li><Link to="/products?wood_type=Sheesham%20(Indian%20Rosewood)">Sheesham Living</Link></li>
+              <li><Link to="/products?wood_type=Teak%20Wood">Teak Dining Sets</Link></li>
+              <li><Link to="/products?wood_type=Oak%20Wood">Solid Oak Bedroom</Link></li>
+              <li><Link to="/products?wood_type=Walnut%20Wood">Walnut Office & Storage</Link></li>
               <li><Link to="/categories">Browse All Categories</Link></li>
               <li><Link to="/offers">Discounted Collections</Link></li>
             </ul>

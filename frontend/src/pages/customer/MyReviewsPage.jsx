@@ -34,8 +34,9 @@ export function MyReviewsPage() {
     setError(null);
     try {
       const res = await customerApi.getMyReviews();
-      if (res.success && Array.isArray(res.data)) {
-        setReviews(res.data);
+      const list = res.reviews || res.data;
+      if (res.success && Array.isArray(list)) {
+        setReviews(list);
       }
     } catch (err) {
       setError(err.message || 'Failed to load your reviews.');

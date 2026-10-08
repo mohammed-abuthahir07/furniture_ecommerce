@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 const AdminNotificationsPage = () => {
-  const { showSuccess, showError } = useToast();
+  const { success: showSuccess, error: showError } = useToast();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -29,21 +29,17 @@ const AdminNotificationsPage = () => {
   const fetchNotifications = async () => {
     try {
       setLoading(true);
-      const res = await adminApi.getNotifications({
-        page,
-        limit: 15,
-        unread_only: unreadOnly ? true : undefined
-      });
+      const res = unreadOnly
+        ? await adminApi.getUnreadNotifications()
+        : await adminApi.getAllNotifications();
 
-      if (res.data?.success) {
-        const data = res.data.data;
-        setNotifications(data.notifications || data.items || (Array.isArray(data) ? data : []));
-        if (data.pagination) {
-          setTotalPages(data.pagination.totalPages || 1);
-        }
+      if (res.success) {
+        const list = res.notifications || [];
+        setNotifications(list);
+        setTotalPages(1);
       }
     } catch (err) {
-      showError(err.response?.data?.message || 'Failed to fetch admin notifications');
+      showError(err.message || 'Failed to fetch admin notifications');
     } finally {
       setLoading(false);
     }
@@ -55,8 +51,8 @@ const AdminNotificationsPage = () => {
 
   const handleMarkAsRead = async (id) => {
     try {
-      const res = await adminApi.markNotificationAsRead(id);
-      if (res.data?.success) {
+      const res = await adminApi.markAsRead(id);
+      if (res.success) {
         setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true, read_at: new Date().toISOString() } : n));
         showSuccess('Notification marked as read');
       }
@@ -67,8 +63,8 @@ const AdminNotificationsPage = () => {
 
   const handleMarkAllRead = async () => {
     try {
-      const res = await adminApi.markAllNotificationsAsRead();
-      if (res.data?.success) {
+      const res = await adminApi.markAllAsRead();
+      if (res.success) {
         setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
         showSuccess('All notifications marked as read');
       }
@@ -80,7 +76,7 @@ const AdminNotificationsPage = () => {
   const handleDelete = async (id) => {
     try {
       const res = await adminApi.deleteNotification(id);
-      if (res.data?.success) {
+      if (res.success) {
         setNotifications(prev => prev.filter(n => n.id !== id));
         showSuccess('Notification deleted');
       }

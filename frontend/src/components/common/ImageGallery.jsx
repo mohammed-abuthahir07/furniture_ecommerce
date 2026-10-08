@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { getImageUrl, handleImageError } from '../../utils/imageUrl';
 import { Modal } from './Modal';
 import { ZoomIn } from 'lucide-react';
@@ -24,15 +24,39 @@ export function ImageGallery({ mainImage, galleryImages = [], productName = 'Pro
 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
+  const touchStartX = useRef(null);
+  const didSwipe = useRef(false);
 
   const activeImage = allImages[selectedIndex] || { image: mainImage };
+
+  const showPrevious = () => setSelectedIndex((index) => Math.max(0, index - 1));
+  const showNext = () => setSelectedIndex((index) => Math.min(allImages.length - 1, index + 1));
 
   return (
     <div className="gallery-container">
       <div
         className="gallery-main-display"
-        onClick={() => setIsZoomOpen(true)}
-        title="Click to zoom furniture details"
+        onClick={() => {
+          if (didSwipe.current) {
+            didSwipe.current = false;
+            return;
+          }
+          setIsZoomOpen(true);
+        }}
+        onTouchStart={(event) => {
+          touchStartX.current = event.changedTouches[0].clientX;
+        }}
+        onTouchEnd={(event) => {
+          if (touchStartX.current == null) return;
+          const delta = event.changedTouches[0].clientX - touchStartX.current;
+          if (Math.abs(delta) > 40) {
+            didSwipe.current = true;
+            if (delta < 0) showNext();
+            else showPrevious();
+          }
+          touchStartX.current = null;
+        }}
+        title="View a larger furniture image"
       >
         <img
           src={getImageUrl(activeImage.image)}

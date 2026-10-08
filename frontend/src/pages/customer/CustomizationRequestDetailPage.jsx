@@ -31,8 +31,9 @@ export function CustomizationRequestDetailPage() {
     setError(null);
     try {
       const res = await customerApi.getMyCustomizationRequestById(id);
-      if (res.success && res.data) {
-        setRequest(res.data);
+      const detail = res.request || res.data;
+      if (res.success && detail) {
+        setRequest(detail);
       }
     } catch (err) {
       setError(err.message || 'Failed to load customization request details.');

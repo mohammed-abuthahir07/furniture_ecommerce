@@ -85,19 +85,30 @@ export const adminApi = {
     api.patch(`/api/admin/inventory/variant/${variantId}/stock`, { stock_quantity }, {}, 'ADMIN'),
 
   // Analytics
-  getAnalyticsSummary: () => api.get('/api/admin/analytics/summary', {}, 'ADMIN'),
-  getSalesTrend: (days = 30) => api.get(`/api/admin/analytics/sales-trend?days=${days}`, {}, 'ADMIN'),
+  getAnalyticsSummary: (from, to) =>
+    api.get(`/api/admin/analytics/summary?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`, {}, 'ADMIN'),
+  getSalesTrend: (from, to) =>
+    api.get(`/api/admin/analytics/sales?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`, {}, 'ADMIN'),
   getRevenueAnalytics: () => api.get('/api/admin/analytics/revenue', {}, 'ADMIN'),
-  getOrdersByStatusAnalytics: () => api.get('/api/admin/analytics/orders-by-status', {}, 'ADMIN'),
+  getOrdersByStatusAnalytics: (from, to) =>
+    api.get(`/api/admin/analytics/orders?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`, {}, 'ADMIN'),
   getProductAnalytics: () => api.get('/api/admin/analytics/products', {}, 'ADMIN'),
-  getBestSellingProductsAnalytics: (limit = 5) =>
-    api.get(`/api/admin/analytics/best-selling-products?limit=${limit}`, {}, 'ADMIN'),
+  getBestSellingProductsAnalytics: (from, to) =>
+    api.get(
+      `/api/admin/analytics/best-selling-products?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
+      {},
+      'ADMIN'
+    ),
   getCategoryAnalytics: () => api.get('/api/admin/analytics/categories', {}, 'ADMIN'),
   getCustomerAnalytics: () => api.get('/api/admin/analytics/customers', {}, 'ADMIN'),
   getPaymentAnalytics: () => api.get('/api/admin/analytics/payments', {}, 'ADMIN'),
   getInventoryAnalytics: () => api.get('/api/admin/analytics/inventory', {}, 'ADMIN'),
-  getBestSellingCategoriesAnalytics: (limit = 5) =>
-    api.get(`/api/admin/analytics/best-selling-categories?limit=${limit}`, {}, 'ADMIN'),
+  getBestSellingCategoriesAnalytics: (from, to) =>
+    api.get(
+      `/api/admin/analytics/best-selling-categories?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
+      {},
+      'ADMIN'
+    ),
 
   // Reports
   getSalesReport: (params = {}) => {

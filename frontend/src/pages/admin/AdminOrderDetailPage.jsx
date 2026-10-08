@@ -37,10 +37,11 @@ export function AdminOrderDetailPage() {
     setError(null);
     try {
       const res = await adminApi.getOrderById(id);
-      if (res.success && res.data) {
-        setOrder(res.data);
-        setSelectedOrderStatus(res.data.order_status || 'PENDING');
-        setSelectedPaymentStatus(res.data.payment_status || 'PENDING');
+      const detail = res.order || res.data;
+      if (res.success && detail) {
+        setOrder(detail);
+        setSelectedOrderStatus(detail.order_status || 'PENDING');
+        setSelectedPaymentStatus(detail.payment_status || 'PENDING');
       }
     } catch (err) {
       setError(err.message || 'Failed to fetch order.');

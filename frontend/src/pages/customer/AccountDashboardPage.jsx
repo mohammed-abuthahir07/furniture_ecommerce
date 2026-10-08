@@ -40,10 +40,12 @@ export function AccountDashboardPage() {
           setRecentOrders(ordersRes.value.data?.slice(0, 3) || []);
         }
         if (notifRes.status === 'fulfilled' && notifRes.value.success) {
-          setUnreadNotifications(notifRes.value.unread_count || 0);
+          const count = notifRes.value.data?.unread_count ?? notifRes.value.unread_count ?? 0;
+          setUnreadNotifications(count);
         }
         if (reqsRes.status === 'fulfilled' && reqsRes.value.success) {
-          setCustomRequestsCount(reqsRes.value.data?.length || 0);
+          const list = reqsRes.value.requests || reqsRes.value.data || [];
+          setCustomRequestsCount(Array.isArray(list) ? list.length : 0);
         }
       } catch {
         // Handle error silently
@@ -77,7 +79,7 @@ export function AccountDashboardPage() {
           </div>
         </Link>
 
-        <Link to="/account/cart" className="surface-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <Link to="/cart" className="surface-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-md)', background: 'var(--accent-amber-light)', color: 'var(--accent-amber)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <ShoppingBag size={22} />
           </div>

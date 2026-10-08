@@ -35,37 +35,63 @@ export function AdminDashboardPage() {
     try {
       const [
         sumRes,
+        revenueRes,
         todayRes,
         statusRes,
         ordersRes,
         stockRes,
         sellersRes,
+        customersRes,
       ] = await Promise.allSettled([
         adminApi.getDashboardSummary(),
+        adminApi.getRevenueSummary(),
         adminApi.getTodayMetrics(),
         adminApi.getOrderStatusCounts(),
         adminApi.getRecentOrders(),
         adminApi.getLowStockVariants(),
         adminApi.getBestSellingProducts(),
+        adminApi.getAllCustomers(),
       ]);
 
       if (sumRes.status === 'fulfilled' && sumRes.value.success) {
-        setSummary(sumRes.value.data);
+        const summaryData = sumRes.value.summary || sumRes.value.data || {};
+        const revenue = revenueRes.status === 'fulfilled' && revenueRes.value.success
+          ? (revenueRes.value.revenue || {})
+          : {};
+        const customerCount = customersRes.status === 'fulfilled' && Array.isArray(customersRes.value.customers)
+          ? customersRes.value.customers.length
+          : 0;
+        setSummary({
+          ...summaryData,
+          total_revenue: revenue.total_revenue || 0,
+          total_products: Number(summaryData.active_products || 0) + Number(summaryData.inactive_products || 0),
+          total_categories: summaryData.active_categories || 0,
+          total_customers: customerCount,
+        });
       }
       if (todayRes.status === 'fulfilled' && todayRes.value.success) {
-        setTodayData(todayRes.value.data);
+        setTodayData(todayRes.value.today || todayRes.value.data || null);
       }
       if (statusRes.status === 'fulfilled' && statusRes.value.success) {
-        setStatusCounts(statusRes.value.data || []);
+        const rows = statusRes.value.order_status || statusRes.value.data || [];
+        setStatusCounts(rows.map((row) => ({
+          status: row.order_status || row.status,
+          count: row.total_orders ?? row.count ?? 0,
+        })));
       }
       if (ordersRes.status === 'fulfilled' && ordersRes.value.success) {
-        setRecentOrders(ordersRes.value.data || []);
+        setRecentOrders(ordersRes.value.orders || ordersRes.value.data || []);
       }
       if (stockRes.status === 'fulfilled' && stockRes.value.success) {
-        setLowStockVariants(stockRes.value.data || []);
+        setLowStockVariants(stockRes.value.variants || stockRes.value.data || []);
       }
       if (sellersRes.status === 'fulfilled' && sellersRes.value.success) {
-        setBestSellers(sellersRes.value.data || []);
+        const sellers = sellersRes.value.products || sellersRes.value.data || [];
+        setBestSellers(sellers.map((item) => ({
+          ...item,
+          total_sold: item.total_quantity_sold ?? item.total_sold ?? item.units_sold,
+          total_revenue: item.total_sales ?? item.total_revenue,
+        })));
       }
     } catch (err) {
       setError(err.message || 'Failed to load dashboard metrics.');
@@ -141,7 +167,7 @@ export function AdminDashboardPage() {
       </div>
 
       {/* Grid: Order Status Breakdown & Low Stock Alert */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+      <div className="admin-split-grid">
         {/* Order Status Distribution */}
         <div className="chart-container">
           <div className="chart-header">
@@ -196,7 +222,7 @@ export function AdminDashboardPage() {
       </div>
 
       {/* Grid: Recent Orders & Best Sellers */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '1.5rem', alignItems: 'flex-start' }}>
+      <div className="admin-split-grid admin-split-wide">
         {/* Recent Orders Table */}
         <div className="admin-table-card" style={{ marginBottom: 0 }}>
           <div className="admin-table-toolbar">

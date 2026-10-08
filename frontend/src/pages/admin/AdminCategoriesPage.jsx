@@ -35,8 +35,9 @@ export function AdminCategoriesPage() {
     setIsLoading(true);
     try {
       const res = await adminApi.getAllCategories();
-      if (res.success && Array.isArray(res.data)) {
-        setCategories(res.data);
+      const list = res.categories || res.data;
+      if (res.success && Array.isArray(list)) {
+        setCategories(list);
       }
     } catch (err) {
       toastError(err.message || 'Failed to fetch categories.');

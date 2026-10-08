@@ -1,4 +1,4 @@
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { PageLoader } from '../components/common/Loader';
 
@@ -14,7 +14,7 @@ export function ProtectedCustomerRoute({ children }) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  return children;
+  return children || <Outlet />;
 }
 
 export default ProtectedCustomerRoute;

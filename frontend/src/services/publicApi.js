@@ -33,11 +33,12 @@ export const publicApi = {
 
   // Recommendations
   getRecommendations: (productId, limit = 8) => {
-    const query = new URLSearchParams();
-    if (productId) query.append('product_id', productId);
-    if (limit) query.append('limit', limit);
-    const queryString = query.toString();
-    return api.get(`/api/public/recommendations${queryString ? `?${queryString}` : ''}`);
+    const id = Number(productId);
+    if (!Number.isInteger(id) || id <= 0) {
+      return Promise.resolve({ success: true, data: [] });
+    }
+    const safeLimit = Math.min(20, Math.max(1, Number(limit) || 8));
+    return api.get(`/api/public/recommendations?product_id=${id}&limit=${safeLimit}`);
   },
 
   // Compare

@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 const AdminReportsPage = () => {
-  const { showError, showSuccess } = useToast();
+  const { error: showError } = useToast();
   const [reportType, setReportType] = useState('sales');
   const [startDate, setStartDate] = useState(() => {
     const d = new Date();
@@ -36,11 +36,8 @@ const AdminReportsPage = () => {
     try {
       setLoading(true);
       const params = {
-        type: reportType,
-        start_date: startDate || undefined,
-        end_date: endDate || undefined,
-        page,
-        limit: 20
+        from: startDate,
+        to: endDate,
       };
 
       let res;
@@ -67,16 +64,16 @@ const AdminReportsPage = () => {
           res = await adminApi.getCategoriesReport(params);
           break;
         default:
-          res = await adminApi.getReports(params);
+          res = await adminApi.getSalesReport(params);
       }
 
-      if (res.data?.success) {
-        setReportData(res.data.data);
+      if (res.success) {
+        setReportData(res.report || []);
       } else {
         setReportData(null);
       }
     } catch (err) {
-      showError(err.response?.data?.message || 'Failed to generate report');
+      showError(err.message || 'Failed to generate report');
       setReportData(null);
     } finally {
       setLoading(false);
@@ -268,12 +265,12 @@ const AdminReportsPage = () => {
                     <tr key={row.id || idx}>
                       {reportType === 'sales' && (
                         <>
-                          <td style={{ fontWeight: '600' }}>{row.date || row.period || `Day ${idx + 1}`}</td>
-                          <td>{row.order_count || row.orders || 0}</td>
-                          <td>{row.items_sold || row.units || 0}</td>
-                          <td style={{ color: 'var(--color-error)' }}>{formatCurrency(row.discounts || 0)}</td>
+                          <td style={{ fontWeight: '600' }}>{row.order_date || row.date || formatDate(row.created_at) || `Row ${idx + 1}`}</td>
+                          <td>{row.order_number || row.order_count || row.orders || 0}</td>
+                          <td>{row.product_name || row.items_sold || row.units || row.quantity || 0}</td>
+                          <td style={{ color: 'var(--color-error)' }}>{formatCurrency(row.discount_amount || row.discounts || 0)}</td>
                           <td style={{ fontWeight: '700', color: 'var(--color-primary)' }}>
-                            {formatCurrency(row.total_revenue || row.revenue || row.amount || 0)}
+                            {formatCurrency(row.item_subtotal || row.total_amount || row.total_revenue || row.revenue || 0)}
                           </td>
                         </>
                       )}
@@ -294,26 +291,26 @@ const AdminReportsPage = () => {
                           <td style={{ fontWeight: '600' }}>{row.name || row.product_name}</td>
                           <td><span style={{ fontFamily: 'monospace' }}>{row.sku || `PROD-${row.id}`}</span></td>
                           <td>{row.category_name || row.Category?.name || 'Furniture'}</td>
-                          <td>{row.units_sold || row.total_sold || 0} units</td>
-                          <td>{row.stock_quantity ?? row.stock ?? 0} units</td>
-                          <td style={{ fontWeight: '700', color: 'var(--color-primary)' }}>{formatCurrency(row.total_revenue || row.revenue || 0)}</td>
+                          <td>{row.total_quantity_sold || row.units_sold || row.total_sold || 0} units</td>
+                          <td>{row.total_orders ?? row.stock_quantity ?? row.stock ?? 0}</td>
+                          <td style={{ fontWeight: '700', color: 'var(--color-primary)' }}>{formatCurrency(row.total_sales || row.total_revenue || row.revenue || 0)}</td>
                         </>
                       )}
 
                       {reportType === 'customers' && (
                         <>
-                          <td style={{ fontWeight: '600' }}>{row.name || `${row.first_name || ''} ${row.last_name || ''}`}</td>
-                          <td>{row.email} {row.phone ? `(${row.phone})` : ''}</td>
-                          <td>{formatDate(row.created_at || row.join_date)}</td>
+                          <td style={{ fontWeight: '600' }}>{row.customer_name || row.name || `${row.first_name || ''} ${row.last_name || ''}`}</td>
+                          <td>{row.customer_email || row.email} {(row.customer_phone || row.phone) ? `(${row.customer_phone || row.phone})` : ''}</td>
+                          <td>{formatDate(row.last_order_date || row.created_at || row.join_date)}</td>
                           <td>{row.total_orders || row.orders_count || 0}</td>
-                          <td style={{ fontWeight: '700', color: 'var(--color-primary)' }}>{formatCurrency(row.lifetime_spend || row.total_spent || 0)}</td>
+                          <td style={{ fontWeight: '700', color: 'var(--color-primary)' }}>{formatCurrency(row.total_amount_spent || row.lifetime_spend || row.total_spent || 0)}</td>
                         </>
                       )}
 
                       {reportType === 'inventory' && (
                         <>
-                          <td style={{ fontWeight: '600' }}>{row.product_name || row.name}</td>
-                          <td><span style={{ fontFamily: 'monospace' }}>{row.sku || `VAR-${row.id}`}</span></td>
+                          <td style={{ fontWeight: '600' }}>{row.product_name || row.name}{row.variant_name ? ` · ${row.variant_name}` : ''}</td>
+                          <td><span style={{ fontFamily: 'monospace' }}>{row.variant_name || row.sku || `VAR-${row.variant_id || row.id}`}</span></td>
                           <td>{formatCurrency(row.price || 0)}</td>
                           <td><strong>{row.stock_quantity ?? row.stock ?? 0}</strong></td>
                           <td style={{ fontWeight: '700', color: 'var(--color-primary)' }}>

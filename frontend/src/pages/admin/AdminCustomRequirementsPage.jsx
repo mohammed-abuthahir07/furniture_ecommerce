@@ -7,22 +7,10 @@ import Modal from '../../components/common/Modal';
 import Loader from '../../components/common/Loader';
 import EmptyState from '../../components/common/EmptyState';
 import Pagination from '../../components/common/Pagination';
-import SelectField from '../../components/forms/SelectField';
-import TextAreaField from '../../components/forms/TextAreaField';
-import { 
-  ClipboardList, 
-  Eye, 
-  Phone, 
-  Mail, 
-  Calendar, 
-  CheckCircle, 
-  Clock, 
-  FileText,
-  Image as ImageIcon 
-} from 'lucide-react';
+import { ClipboardList, Eye } from 'lucide-react';
 
 const AdminCustomRequirementsPage = () => {
-  const { showSuccess, showError } = useToast();
+  const { error: showError } = useToast();
   const [requirements, setRequirements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -31,28 +19,25 @@ const AdminCustomRequirementsPage = () => {
 
   const [selectedReq, setSelectedReq] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [newStatus, setNewStatus] = useState('CONTACTED');
-  const [adminNotes, setAdminNotes] = useState('');
-  const [updating, setUpdating] = useState(false);
 
   const fetchRequirements = async () => {
     try {
       setLoading(true);
-      const res = await adminApi.getCustomRequirements({
-        page,
-        limit: 15,
-        status: statusFilter || undefined
-      });
+      const res = await adminApi.getAllCustomRequirements();
 
-      if (res.data?.success) {
-        const data = res.data.data;
-        setRequirements(data.requirements || data.items || (Array.isArray(data) ? data : []));
-        if (data.pagination) {
-          setTotalPages(data.pagination.totalPages || 1);
-        }
+      if (res.success) {
+        const list = Array.isArray(res.data) ? res.data : [];
+        const query = statusFilter.trim().toLowerCase();
+        const filtered = query
+          ? list.filter((item) =>
+              `${item.name || ''} ${item.city || ''} ${item.requirement || ''}`.toLowerCase().includes(query)
+            )
+          : list;
+        setRequirements(filtered);
+        setTotalPages(1);
       }
     } catch (err) {
-      showError(err.response?.data?.message || 'Failed to load custom requirements');
+      showError(err.message || 'Failed to load custom requirements');
     } finally {
       setLoading(false);
     }
@@ -64,30 +49,7 @@ const AdminCustomRequirementsPage = () => {
 
   const openDetailModal = (req) => {
     setSelectedReq(req);
-    setNewStatus(req.status || 'CONTACTED');
-    setAdminNotes(req.admin_notes || '');
     setModalOpen(true);
-  };
-
-  const handleUpdateStatus = async (e) => {
-    e.preventDefault();
-    try {
-      setUpdating(true);
-      const res = await adminApi.updateCustomRequirementStatus(selectedReq.id, {
-        status: newStatus,
-        admin_notes: adminNotes
-      });
-
-      if (res.data?.success) {
-        showSuccess('Custom requirement status updated successfully');
-        setModalOpen(false);
-        fetchRequirements();
-      }
-    } catch (err) {
-      showError(err.response?.data?.message || 'Failed to update requirement status');
-    } finally {
-      setUpdating(false);
-    }
   };
 
   return (
@@ -103,20 +65,14 @@ const AdminCustomRequirementsPage = () => {
       <div className="admin-table-container">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid var(--color-border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>Status Filter:</span>
-            <select
+            <span style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>Search:</span>
+            <input
               value={statusFilter}
               onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-              className="form-select"
-              style={{ width: 'auto', padding: '6px 12px', fontSize: '13px' }}
-            >
-              <option value="">All Inquiries</option>
-              <option value="NEW">New Leads</option>
-              <option value="CONTACTED">Contacted</option>
-              <option value="IN_PROGRESS">In Progress</option>
-              <option value="RESOLVED">Resolved / Converted</option>
-              <option value="CLOSED">Closed / Dropped</option>
-            </select>
+              className="form-input"
+              placeholder="Name, city, or requirement"
+              style={{ width: '240px', maxWidth: '100%', padding: '6px 12px', fontSize: '13px' }}
+            />
           </div>
         </div>
 
@@ -138,11 +94,9 @@ const AdminCustomRequirementsPage = () => {
                 <tr>
                   <th>Lead ID</th>
                   <th>Contact Person</th>
-                  <th>Furniture Category</th>
-                  <th>Preferred Timber</th>
-                  <th>Budget Range</th>
+                  <th>City</th>
+                  <th>Requirement</th>
                   <th>Date</th>
-                  <th>Status</th>
                   <th>Action</th>
                 </tr>
               </thead>
@@ -161,30 +115,13 @@ const AdminCustomRequirementsPage = () => {
                         {req.phone && <span>• {req.phone}</span>}
                       </div>
                     </td>
-                    <td>
-                      <div style={{ fontWeight: '500' }}>{req.furniture_type || req.category || 'General Furniture'}</div>
-                      {req.room_type && (
-                        <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>{req.room_type}</div>
-                      )}
-                    </td>
-                    <td>
-                      <span className="badge badge-secondary">{req.wood_type || 'Customer Choice'}</span>
-                    </td>
-                    <td>
-                      <span style={{ fontWeight: '600', color: 'var(--color-primary)' }}>
-                        {req.budget_range || 'Flexible'}
-                      </span>
+                    <td>{req.city || '—'}</td>
+                    <td style={{ maxWidth: 280 }}>
+                      <div style={{ fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {req.requirement || 'Custom furniture request'}
+                      </div>
                     </td>
                     <td>{formatDate(req.created_at)}</td>
-                    <td>
-                      <span className={`badge ${
-                        req.status === 'NEW' ? 'badge-primary' :
-                        req.status === 'RESOLVED' ? 'badge-success' :
-                        req.status === 'CLOSED' ? 'badge-error' : 'badge-warning'
-                      }`}>
-                        {req.status || 'NEW'}
-                      </span>
-                    </td>
                     <td>
                       <button
                         className="btn btn-secondary btn-sm"
@@ -226,29 +163,26 @@ const AdminCustomRequirementsPage = () => {
                 <div><strong>Email:</strong> {selectedReq.email}</div>
                 <div><strong>Phone Number:</strong> {selectedReq.phone || 'N/A'}</div>
                 <div><strong>City / Location:</strong> {selectedReq.city || selectedReq.location || 'N/A'}</div>
-                <div><strong>Furniture Type:</strong> {selectedReq.furniture_type || 'N/A'}</div>
-                <div><strong>Preferred Timber:</strong> {selectedReq.wood_type || 'N/A'}</div>
-                <div><strong>Budget Estimate:</strong> {selectedReq.budget_range || 'N/A'}</div>
-                <div><strong>Required By:</strong> {selectedReq.required_by || 'Flexible'}</div>
+                <div><strong>State:</strong> {selectedReq.state || 'N/A'}</div>
+                <div><strong>PIN code:</strong> {selectedReq.pincode || 'N/A'}</div>
+                <div style={{ gridColumn: '1 / -1' }}><strong>Address:</strong> {selectedReq.address || 'N/A'}</div>
               </div>
 
-              {selectedReq.description && (
-                <div style={{ marginTop: '14px', paddingTop: '10px', borderTop: '1px solid var(--color-border)', fontSize: '13px' }}>
-                  <strong>Project Description / Requirements:</strong>
-                  <p style={{ margin: '4px 0 0 0', lineHeight: '1.5' }}>
-                    {selectedReq.description}
-                  </p>
-                </div>
-              )}
+              <div style={{ marginTop: '14px', paddingTop: '10px', borderTop: '1px solid var(--color-border)', fontSize: '13px' }}>
+                <strong>Furniture requirement:</strong>
+                <p style={{ margin: '4px 0 0 0', lineHeight: '1.5' }}>
+                  {selectedReq.requirement || 'No requirement notes were provided.'}
+                </p>
+              </div>
 
-              {selectedReq.image_url && (
+              {selectedReq.reference_image && (
                 <div style={{ marginTop: '14px' }}>
-                  <strong>Attached Sketch / Design Spec:</strong>
+                  <strong>Reference image:</strong>
                   <div style={{ marginTop: '6px' }}>
-                    <a href={getImageUrl(selectedReq.image_url)} target="_blank" rel="noreferrer">
+                    <a href={getImageUrl(selectedReq.reference_image)} target="_blank" rel="noreferrer">
                       <img
-                        src={getImageUrl(selectedReq.image_url)}
-                        alt="Design Reference"
+                        src={getImageUrl(selectedReq.reference_image)}
+                        alt="Custom furniture reference"
                         style={{ maxWidth: '240px', maxHeight: '160px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--color-border)' }}
                       />
                     </a>
@@ -257,46 +191,14 @@ const AdminCustomRequirementsPage = () => {
               )}
             </div>
 
-            <form onSubmit={handleUpdateStatus}>
-              <SelectField
-                label="Lead Status"
-                value={newStatus}
-                onChange={(e) => setNewStatus(e.target.value)}
-                options={[
-                  { value: 'NEW', label: 'New Lead' },
-                  { value: 'CONTACTED', label: 'Contacted Client' },
-                  { value: 'IN_PROGRESS', label: 'Design In Progress' },
-                  { value: 'RESOLVED', label: 'Converted to Custom Order' },
-                  { value: 'CLOSED', label: 'Closed / Not Interested' }
-                ]}
-              />
-
-              <TextAreaField
-                label="Internal Admin Notes (Follow-up log)"
-                rows={3}
-                value={adminNotes}
-                onChange={(e) => setAdminNotes(e.target.value)}
-                placeholder="e.g. Called client on 10/10, shared teak dining table samples..."
-              />
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '20px' }}>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setModalOpen(false)}
-                  disabled={updating}
-                >
-                  Close
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  disabled={updating}
-                >
-                  {updating ? 'Saving...' : 'Update Lead Status'}
-                </button>
-              </div>
-            </form>
+            <p style={{ fontSize: '13px', color: 'var(--neutral-500)', marginBottom: '12px' }}>
+              These public inquiries are view-only. Follow up with the customer using the contact details above.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button type="button" className="btn btn-secondary" onClick={() => setModalOpen(false)}>
+                Close
+              </button>
+            </div>
           </div>
         </Modal>
       )}

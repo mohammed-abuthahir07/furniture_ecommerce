@@ -59,6 +59,7 @@ export function ProductDetailPage() {
   const fetchProduct = async () => {
     setIsLoading(true);
     setError(null);
+
     try {
       const [prodRes, recRes] = await Promise.all([
         publicApi.getProductById(id),

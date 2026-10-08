@@ -16,6 +16,7 @@ const {
 } = require("../models/notificationModel");
 
 const { pool } = require("../../config/database");
+const { assertRazorpayPayment } = require("./paymentController");
 
 
 /*
@@ -358,12 +359,40 @@ const placeOrder = async (req, res) => {
     | Payment Status
     |--------------------------------------------------------------------------
     |
-    | Online payment integration is not yet completed.
-    | Therefore both COD and ONLINE start as PENDING.
+    | COD stays pending until delivery.
+    | ONLINE is accepted only after Razorpay verifies the payment.
     |
     */
 
-    const paymentStatus = "PENDING";
+    let paymentStatus = "PENDING";
+    let razorpayPaymentId = null;
+
+    if (selectedPaymentMethod === "ONLINE") {
+      const {
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature,
+      } = req.body;
+
+      try {
+        await assertRazorpayPayment({
+          orderId: razorpay_order_id,
+          paymentId: razorpay_payment_id,
+          signature: razorpay_signature,
+          totalAmount,
+        });
+      } catch (verifyError) {
+        await connection.rollback();
+
+        return res.status(verifyError.statusCode || 400).json({
+          success: false,
+          message: verifyError.message || "Payment verification failed",
+        });
+      }
+
+      paymentStatus = "PAID";
+      razorpayPaymentId = razorpay_payment_id;
+    }
 
 
     /*
@@ -427,11 +456,10 @@ const placeOrder = async (req, res) => {
 
       orderStatus,
 
-      notes:
-        notes &&
-        notes.trim()
-          ? notes.trim()
-          : null,
+      notes: [
+        notes && notes.trim() ? notes.trim() : "",
+        razorpayPaymentId ? `Razorpay: ${razorpayPaymentId}` : "",
+      ].filter(Boolean).join("\n") || null,
     });
 
 

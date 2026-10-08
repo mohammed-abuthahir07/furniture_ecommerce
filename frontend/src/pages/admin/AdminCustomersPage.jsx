@@ -24,8 +24,9 @@ export function AdminCustomersPage() {
     setIsLoading(true);
     try {
       const res = await adminApi.getAllCustomers();
-      if (res.success && Array.isArray(res.data)) {
-        setCustomers(res.data);
+      const list = res.customers || res.data;
+      if (res.success && Array.isArray(list)) {
+        setCustomers(list);
       }
     } catch (err) {
       toastError(err.message || 'Failed to load customers.');
@@ -44,9 +45,10 @@ export function AdminCustomersPage() {
     setIsLoadingDetail(true);
     try {
       const res = await adminApi.getCustomerById(cust.id);
-      if (res.success && res.data) {
-        setSelectedCustomer(res.data);
-        setCustomerOrders(res.data.orders || []);
+      const detail = res.customer || res.data;
+      if (res.success && detail) {
+        setSelectedCustomer(detail);
+        setCustomerOrders(res.orders || detail.orders || []);
       }
     } catch (err) {
       toastError(err.message || 'Failed to fetch customer order history.');

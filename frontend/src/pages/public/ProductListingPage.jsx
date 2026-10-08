@@ -66,10 +66,8 @@ export function ProductListingPage() {
       });
 
       if (res.success) {
-        setProducts(res.data || []);
-        if (res.pagination) {
-          setPagination(res.pagination);
-        }
+        setProducts(Array.isArray(res.data) ? res.data : []);
+        if (res.pagination) setPagination(res.pagination);
       }
     } catch (err) {
       setError(err.message || 'Failed to load products.');
@@ -272,6 +270,7 @@ export function ProductListingPage() {
                   type="button"
                   className="modal-close-btn"
                   onClick={() => setIsMobileFilterOpen(false)}
+                  aria-label="Close filters"
                 >
                   <X size={20} />
                 </button>
@@ -288,8 +287,8 @@ export function ProductListingPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <button
                 type="button"
-                className="btn btn-secondary btn-sm"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                className="btn btn-secondary btn-sm mobile-filter-btn"
+                style={{ alignItems: 'center', gap: 6 }}
                 onClick={() => setIsMobileFilterOpen(true)}
               >
                 <SlidersHorizontal size={14} />

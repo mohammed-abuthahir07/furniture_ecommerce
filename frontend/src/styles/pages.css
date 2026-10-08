@@ -115,6 +115,90 @@
   color: var(--neutral-500);
 }
 
+.home-block {
+  margin-bottom: 4rem;
+}
+
+.room-grid,
+.wood-grid,
+.faq-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.room-card,
+.faq-grid article,
+.wood-grid .surface-card {
+  background: #ffffff;
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  min-width: 0;
+}
+
+.room-card h3,
+.faq-grid h3,
+.wood-grid h3 {
+  font-size: 1.05rem;
+  margin-bottom: 0.4rem;
+}
+
+.room-card p,
+.faq-grid p,
+.wood-grid p,
+.craft-steps span {
+  color: var(--neutral-600);
+  font-size: 0.9rem;
+}
+
+.room-card span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.8rem;
+  color: var(--primary-700);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.room-card:hover {
+  border-color: var(--primary-300);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.craft-steps {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  counter-reset: craft;
+}
+
+.craft-steps li {
+  background: #ffffff;
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.craft-steps li::before {
+  counter-increment: craft;
+  content: counter(craft);
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: var(--primary-50);
+  color: var(--primary-800);
+  font-weight: 800;
+}
+
 /* Category Grid on Home */
 .section-header {
   display: flex;

@@ -47,9 +47,31 @@
   --admin-sidebar-text: #a0aec0;
   --admin-sidebar-text-active: #ffffff;
 
-  /* Typography */
-  --font-heading: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  /* Typography — one clean sans-serif system across storefront and admin */
+  --font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+  --font-heading: var(--font-family);
+  --font-body: var(--font-family);
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2.5rem;
+
+  --z-header: 1000;
+  --z-dropdown: 1100;
+  --z-overlay: 1200;
+  --z-drawer: 1250;
+  --z-modal: 1400;
+  --z-toast: 1500;
   
   /* Radii */
   --radius-xs: 4px;

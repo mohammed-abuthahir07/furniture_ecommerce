@@ -3,6 +3,28 @@
    320px, 360px, 375px, 390px, 414px, 768px, 820px, 1024px, 1280px, 1440px, 1920px
    ========================================================================== */
 
+.mobile-filter-btn {
+  display: none;
+}
+
+.admin-split-grid,
+.admin-split-wide {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .admin-split-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .admin-split-wide {
+    grid-template-columns: 1.2fr 0.8fr;
+  }
+}
+
 /* Large Desktop (1440px - 1920px) */
 @media (min-width: 1440px) {
   :root {
@@ -50,6 +72,13 @@
 
   .hero-cta-group {
     justify-content: center;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero-cta-group .btn {
+    width: 100%;
+    white-space: normal;
   }
 
   .hero-image-card {
@@ -57,9 +86,13 @@
     margin: 0 auto;
   }
 
-  .features-bar {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
+  .features-bar,
+  .room-grid,
+  .wood-grid,
+  .faq-grid,
+  .craft-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
   }
 
   .product-listing-layout {
@@ -96,10 +129,44 @@
     bottom: 0;
     transform: translateX(-100%);
     box-shadow: var(--shadow-xl);
+    z-index: var(--z-drawer);
   }
 
   .admin-sidebar.open {
     transform: translateX(0);
+  }
+
+  .admin-menu-toggle {
+    display: inline-flex;
+  }
+
+  .mobile-filter-btn {
+    display: inline-flex;
+  }
+
+  .drawer-content .filters-sidebar {
+    display: block;
+    position: static;
+    width: 100%;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    top: auto;
+  }
+
+  .listing-topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .listing-topbar .form-select {
+    width: 100% !important;
+  }
+
+  .admin-split-grid,
+  .admin-split-wide {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -114,21 +181,65 @@
   }
 
   .header-inner {
-    height: var(--header-height-mobile);
+    flex-wrap: wrap;
+    height: auto;
     gap: 0.75rem;
+    padding: 0.45rem 0 0.65rem;
   }
 
   .header-search {
-    display: none; /* Surface inline search bar below header */
+    display: block;
+    order: 5;
+    flex: 1 1 100%;
+    max-width: none;
   }
 
   .brand-logo {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
+    min-width: 0;
+  }
+
+  .brand-tagline,
+  .admin-user-meta,
+  .storefront-label {
+    display: none;
+  }
+
+  .header-actions {
+    gap: 0.15rem;
+  }
+
+  .action-icon-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .listing-topbar .form-select {
+    max-width: 100%;
+  }
+
+  .gallery-thumbnails {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+
+  .btn,
+  .form-input,
+  .form-select,
+  .form-textarea {
+    min-height: 44px;
   }
 
   .features-bar {
     grid-template-columns: 1fr;
     gap: 1.25rem;
+  }
+
+  .room-grid,
+  .wood-grid,
+  .faq-grid,
+  .craft-steps {
+    grid-template-columns: 1fr;
   }
 
   .category-grid {
@@ -224,8 +335,12 @@
 }
 
 /* Extra Small Screens (320px - 375px) */
-@media (max-width: 375px) {
+@media (max-width: 359px) {
   .products-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .category-grid {
     grid-template-columns: 1fr;
   }
   

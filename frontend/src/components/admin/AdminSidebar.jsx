@@ -39,7 +39,7 @@ export function AdminSidebar({ isOpen, onClose }) {
       items: [
         { label: 'Orders', to: '/admin/orders', icon: ShoppingCart },
         { label: 'Customers', to: '/admin/customers', icon: Users },
-        { label: 'Customization Requests', to: '/admin/customization-requests', icon: SlidersHorizontal },
+        { label: 'Customization Requests', to: '/admin/customizations', icon: SlidersHorizontal },
         { label: 'Custom Requirements', to: '/admin/custom-requirements', icon: FileQuestion },
       ],
     },

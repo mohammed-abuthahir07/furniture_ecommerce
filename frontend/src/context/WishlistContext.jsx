@@ -23,9 +23,10 @@ export function WishlistProvider({ children }) {
     try {
       setIsLoading(true);
       const res = await customerApi.getWishlist();
-      if (res.success && Array.isArray(res.data)) {
-        setWishlist(res.data);
-        const ids = new Set(res.data.map((item) => Number(item.id || item.product_id)));
+      const items = Array.isArray(res.wishlist) ? res.wishlist : Array.isArray(res.data) ? res.data : null;
+      if (res.success && items) {
+        setWishlist(items);
+        const ids = new Set(items.map((item) => Number(item.product_id)));
         setWishlistIds(ids);
       }
     } catch {
@@ -50,6 +51,10 @@ export function WishlistProvider({ children }) {
     }
 
     const id = Number(productId);
+    if (!Number.isInteger(id) || id <= 0) {
+      toastError('Showroom samples can be requested from the custom studio.');
+      return false;
+    }
     const currentlyWishlisted = wishlistIds.has(id);
 
     try {

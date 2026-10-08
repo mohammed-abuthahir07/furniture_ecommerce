@@ -59,11 +59,13 @@ export function AdminProductsPage() {
         adminApi.getAllCategories(),
       ]);
 
-      if (prodRes.success && Array.isArray(prodRes.data)) {
-        setProducts(prodRes.data);
+      const productList = prodRes.products || prodRes.data;
+      if (prodRes.success && Array.isArray(productList)) {
+        setProducts(productList);
       }
-      if (catRes.success && Array.isArray(catRes.data)) {
-        setCategories(catRes.data);
+      const categoryList = catRes.categories || catRes.data;
+      if (catRes.success && Array.isArray(categoryList)) {
+        setCategories(categoryList);
       }
     } catch (err) {
       toastError(err.message || 'Failed to fetch products.');

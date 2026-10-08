@@ -66,14 +66,17 @@ export function AdminProductDetailPage() {
         adminApi.getImagesByProductId(id),
       ]);
 
-      if (prodRes.success && prodRes.data) {
-        setProduct(prodRes.data);
+      const product = prodRes.product || prodRes.data;
+      if (prodRes.success && product) {
+        setProduct(product);
       }
-      if (varRes.success && Array.isArray(varRes.data)) {
-        setVariants(varRes.data);
+      const variantList = varRes.variants || varRes.data;
+      if (varRes.success && Array.isArray(variantList)) {
+        setVariants(variantList);
       }
-      if (imgRes.success && Array.isArray(imgRes.data)) {
-        setImages(imgRes.data);
+      const imageList = imgRes.images || imgRes.data;
+      if (imgRes.success && Array.isArray(imageList)) {
+        setImages(imageList);
       }
     } catch (err) {
       setError(err.message || 'Failed to fetch product management data.');

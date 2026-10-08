@@ -38,8 +38,9 @@ export function CustomizationRequestsPage() {
     setError(null);
     try {
       const res = await customerApi.getMyCustomizationRequests();
-      if (res.success && Array.isArray(res.data)) {
-        setRequests(res.data);
+      const list = res.requests || res.data;
+      if (res.success && Array.isArray(list)) {
+        setRequests(list);
       }
     } catch (err) {
       setError(err.message || 'Failed to load customization requests.');

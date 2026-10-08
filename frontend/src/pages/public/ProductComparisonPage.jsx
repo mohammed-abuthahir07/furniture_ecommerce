@@ -34,13 +34,33 @@ export function ProductComparisonPage() {
     setIsLoading(true);
     setError(null);
 
+    const loadIndividually = () =>
+      Promise.all(ids.map((id) => publicApi.getProductById(id)))
+        .then((results) => {
+          const products = results
+            .filter((res) => res.success && res.data)
+            .map((res) => res.data);
+          setComparedProducts(products);
+          if (products.length === 0) {
+            setError('Those furniture pieces could not be loaded for comparison.');
+          }
+        });
+
     publicApi
       .compareProducts(ids)
       .then((res) => {
-        if (res.success && Array.isArray(res.data)) {
-          setComparedProducts(res.data);
+        const compared = Array.isArray(res.data?.products)
+          ? res.data.products
+          : Array.isArray(res.data)
+            ? res.data
+            : null;
+        if (res.success && compared) {
+          setComparedProducts(compared);
+          return null;
         }
+        return loadIndividually();
       })
+      .catch(() => loadIndividually())
       .catch((err) => {
         setError(err.message || 'Failed to compare products.');
       })

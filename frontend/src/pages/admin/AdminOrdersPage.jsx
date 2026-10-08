@@ -8,7 +8,7 @@ import { useToast } from '../../context/ToastContext';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 
 export function AdminOrdersPage() {
-  const { toastError } = useToast();
+  const { error: toastError } = useToast();
 
   const [orders, setOrders] = useState([]);
   const [statusFilter, setStatusFilter] = useState('ALL');
@@ -18,8 +18,9 @@ export function AdminOrdersPage() {
     setIsLoading(true);
     try {
       const res = await adminApi.getAllOrders();
-      if (res.success && Array.isArray(res.data)) {
-        setOrders(res.data);
+      const list = res.orders || res.data;
+      if (res.success && Array.isArray(list)) {
+        setOrders(list);
       }
     } catch (err) {
       toastError(err.message || 'Failed to fetch customer orders.');

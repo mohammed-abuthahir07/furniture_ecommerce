@@ -16,54 +16,82 @@ import {
 } from 'lucide-react';
 
 const AdminSettingsPage = () => {
-  const { adminUser, checkAdminAuth } = useAuth();
-  const { showSuccess, showError } = useToast();
+  const { admin, refreshAdmin } = useAuth();
+  const { success: showSuccess, error: showError } = useToast();
   
   const [activeTab, setActiveTab] = useState('profile'); // 'profile', 'password', 'store'
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
+  const [savingStore, setSavingStore] = useState(false);
 
   // Profile state
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
 
   // Password state
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // Store settings state (local / backend config)
-  const [shippingFee, setShippingFee] = useState('499');
-  const [freeShippingThreshold, setFreeShippingThreshold] = useState('15000');
-  const [storeEmail, setStoreEmail] = useState('support@woodcraftfurniture.com');
-  const [storePhone, setStorePhone] = useState('+91 98765 43210');
-  const [storeAddress, setStoreAddress] = useState('Industrial Area Phase 2, Jodhpur, Rajasthan 342001');
+  // Store delivery settings
+  const [shippingFee, setShippingFee] = useState('0');
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState('0');
+  const [defaultDeliveryDays, setDefaultDeliveryDays] = useState('7');
+  const [codEnabled, setCodEnabled] = useState(true);
+  const [onlineEnabled, setOnlineEnabled] = useState(true);
 
   useEffect(() => {
-    if (adminUser) {
-      setName(adminUser.name || `${adminUser.first_name || ''} ${adminUser.last_name || ''}`.trim() || 'Admin');
-      setEmail(adminUser.email || '');
-      setPhone(adminUser.phone || '');
+    let active = true;
+    async function loadSettings() {
+      try {
+        const [profileRes, storeRes] = await Promise.all([
+          adminApi.getSettingsProfile(),
+          adminApi.getStoreSettings(),
+        ]);
+        if (!active) return;
+        const profile = profileRes.profile || admin;
+        if (profile) {
+          setName(profile.name || '');
+          setEmail(profile.email || '');
+        }
+        const settings = storeRes.settings;
+        if (settings) {
+          setShippingFee(String(settings.shipping_charge ?? '0'));
+          setFreeShippingThreshold(String(settings.free_shipping_threshold ?? '0'));
+          setDefaultDeliveryDays(String(settings.default_delivery_days ?? '7'));
+          setCodEnabled(Boolean(Number(settings.cod_enabled ?? settings.cod_enabled === true)));
+          setOnlineEnabled(Boolean(Number(settings.online_payment_enabled ?? 1)));
+        }
+      } catch (err) {
+        if (active) showError(err.message || 'Failed to load store settings');
+      } finally {
+        if (active) setLoading(false);
+      }
     }
-  }, [adminUser]);
+    loadSettings();
+    return () => { active = false; };
+  }, [admin]);
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     try {
       setSavingProfile(true);
-      const res = await adminApi.updateProfile({
+      const res = await adminApi.updateSettingsProfile({
         name,
-        phone
+        email,
       });
 
-      if (res.data?.success) {
+      if (res.success) {
         showSuccess('Admin profile updated successfully');
-        if (checkAdminAuth) await checkAdminAuth();
+        if (res.profile) {
+          setName(res.profile.name || name);
+          setEmail(res.profile.email || email);
+        }
+        if (refreshAdmin) await refreshAdmin();
       }
     } catch (err) {
-      showError(err.response?.data?.message || 'Failed to update admin profile');
+      showError(err.message || 'Failed to update admin profile');
     } finally {
       setSavingProfile(false);
     }
@@ -71,8 +99,8 @@ const AdminSettingsPage = () => {
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
-    if (newPassword.length < 6) {
-      showError('New password must be at least 6 characters long');
+    if (newPassword.length < 8 || !/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+      showError('Password must be at least 8 characters and include uppercase, lowercase, and a number.');
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -88,22 +116,38 @@ const AdminSettingsPage = () => {
         confirm_password: confirmPassword
       });
 
-      if (res.data?.success) {
+      if (res.success) {
         showSuccess('Admin password changed successfully');
         setCurrentPassword('');
         setNewPassword('');
         setConfirmPassword('');
       }
     } catch (err) {
-      showError(err.response?.data?.message || 'Failed to change password. Verify your current password.');
+      showError(err.message || 'Failed to change password. Verify your current password.');
     } finally {
       setSavingPassword(false);
     }
   };
 
-  const handleSaveStoreSettings = (e) => {
+  const handleSaveStoreSettings = async (e) => {
     e.preventDefault();
-    showSuccess('Store operational policies and shipping rules saved');
+    try {
+      setSavingStore(true);
+      const res = await adminApi.updateStoreSettings({
+        shipping_charge: Number(shippingFee),
+        free_shipping_threshold: Number(freeShippingThreshold),
+        default_delivery_days: Number(defaultDeliveryDays),
+        cod_enabled: codEnabled,
+        online_payment_enabled: onlineEnabled,
+      });
+      if (res.success) {
+        showSuccess(res.message || 'Delivery settings saved');
+      }
+    } catch (err) {
+      showError(err.message || 'Failed to save delivery settings');
+    } finally {
+      setSavingStore(false);
+    }
   };
 
   return (
@@ -157,16 +201,11 @@ const AdminSettingsPage = () => {
 
               <InputField
                 label="Email Address"
+                type="email"
                 value={email}
-                disabled
-                helperText="Admin login email is locked to system security rules."
-              />
-
-              <InputField
-                label="Contact Phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="+91 98765 43210"
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                helperText="This is the email used to sign in to the admin portal."
               />
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
@@ -202,8 +241,8 @@ const AdminSettingsPage = () => {
                 required
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="At least 6 characters"
-                helperText="Must be minimum 6 characters with mixed letters and numbers."
+                placeholder="At least 8 characters"
+                helperText="Use at least 8 characters with uppercase, lowercase, and a number."
               />
 
               <InputField
@@ -252,27 +291,34 @@ const AdminSettingsPage = () => {
               </div>
 
               <InputField
-                label="Public Support Email"
-                type="email"
-                value={storeEmail}
-                onChange={(e) => setStoreEmail(e.target.value)}
+                label="Default Furniture Delivery Days"
+                type="number"
+                min="1"
+                value={defaultDeliveryDays}
+                onChange={(e) => setDefaultDeliveryDays(e.target.value)}
+                helperText="Shown to customers when a product does not set its own delivery window."
               />
 
-              <InputField
-                label="Customer Helpline"
-                value={storePhone}
-                onChange={(e) => setStorePhone(e.target.value)}
-              />
-
-              <InputField
-                label="Main Carpentry Studio & Warehouse Address"
-                value={storeAddress}
-                onChange={(e) => setStoreAddress(e.target.value)}
-              />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <label className="form-group">
+                  <span className="form-label">Cash on Delivery</span>
+                  <select className="form-select" value={codEnabled ? 'true' : 'false'} onChange={(e) => setCodEnabled(e.target.value === 'true')}>
+                    <option value="true">Enabled</option>
+                    <option value="false">Disabled</option>
+                  </select>
+                </label>
+                <label className="form-group">
+                  <span className="form-label">Online Payment</span>
+                  <select className="form-select" value={onlineEnabled ? 'true' : 'false'} onChange={(e) => setOnlineEnabled(e.target.value === 'true')}>
+                    <option value="true">Enabled</option>
+                    <option value="false">Disabled</option>
+                  </select>
+                </label>
+              </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
-                <button type="submit" className="btn btn-primary">
-                  <Save size={16} /> Save Store Parameters
+                <button type="submit" className="btn btn-primary" disabled={savingStore || loading}>
+                  <Save size={16} /> {savingStore ? 'Saving...' : 'Save Delivery Settings'}
                 </button>
               </div>
             </form>

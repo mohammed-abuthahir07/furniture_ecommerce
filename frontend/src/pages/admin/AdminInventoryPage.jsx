@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { adminApi } from '../../services/adminApi';
 import { useToast } from '../../context/ToastContext';
 import { formatCurrency, formatDate } from '../../utils/formatters';
-import getImageUrl from '../../utils/imageUrl';
+import getImageUrl, { handleImageError } from '../../utils/imageUrl';
 import Modal from '../../components/common/Modal';
 import Loader from '../../components/common/Loader';
 import EmptyState from '../../components/common/EmptyState';
@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 
 const AdminInventoryPage = () => {
-  const { showSuccess, showError } = useToast();
+  const { success: showSuccess, error: showError } = useToast();
   const [summary, setSummary] = useState(null);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -47,8 +47,8 @@ const AdminInventoryPage = () => {
     try {
       setSummaryLoading(true);
       const res = await adminApi.getInventorySummary();
-      if (res.data?.success) {
-        setSummary(res.data.data);
+      if (res.success) {
+        setSummary(res.summary || null);
       }
     } catch (err) {
       console.error('Failed to load inventory summary', err);
@@ -62,27 +62,31 @@ const AdminInventoryPage = () => {
       setLoading(true);
       let res;
       if (activeTab === 'low-stock') {
-        res = await adminApi.getLowStock({ page, limit: 15 });
+        res = await adminApi.getLowStockInventory();
+      } else if (stockStatus === 'OUT_OF_STOCK') {
+        res = await adminApi.getOutOfStockInventory();
+      } else if (stockStatus === 'LOW_STOCK') {
+        res = await adminApi.getLowStockInventory();
       } else {
-        res = await adminApi.getInventory({
-          page,
-          limit: 15,
-          search: search || undefined,
-          stock_status: stockStatus || undefined
-        });
+        res = await adminApi.getAllInventory();
       }
 
-      if (res.data?.success) {
-        const data = res.data.data;
-        setItems(data.items || data.inventory || data.variants || []);
-        if (data.pagination) {
-          setTotalPages(data.pagination.totalPages || 1);
-        } else {
-          setTotalPages(Math.ceil((data.total || items.length) / 15) || 1);
+      if (res.success) {
+        let rows = res.inventory || [];
+        const query = search.trim().toLowerCase();
+        if (query) {
+          rows = rows.filter((row) =>
+            `${row.product_name || ''} ${row.variant_name || ''} ${row.color || ''}`.toLowerCase().includes(query)
+          );
         }
+        if (stockStatus === 'IN_STOCK') {
+          rows = rows.filter((row) => row.availability_status === 'AVAILABLE');
+        }
+        setItems(rows);
+        setTotalPages(1);
       }
     } catch (err) {
-      showError(err.response?.data?.message || 'Failed to load inventory');
+      showError(err.message || 'Failed to load inventory');
     } finally {
       setLoading(false);
     }
@@ -119,21 +123,17 @@ const AdminInventoryPage = () => {
 
     try {
       setUpdating(true);
-      const res = await adminApi.updateVariantStock(selectedVariant.id || selectedVariant.variant_id, {
-        stock: Number(newStock),
-        stock_quantity: Number(newStock),
-        reason: updateReason,
-        notes: updateNotes
-      });
+      const variantId = selectedVariant.variant_id || selectedVariant.id;
+      const res = await adminApi.updateInventoryVariantStock(variantId, Number(newStock));
 
-      if (res.data?.success) {
+      if (res.success) {
         showSuccess('Stock quantity updated successfully');
         setStockModalOpen(false);
         fetchInventory();
         fetchSummary();
       }
     } catch (err) {
-      showError(err.response?.data?.message || 'Failed to update stock');
+      showError(err.message || 'Failed to update stock');
     } finally {
       setUpdating(false);
     }
@@ -164,7 +164,7 @@ const AdminInventoryPage = () => {
             </div>
           </div>
           <div className="admin-metric-value">
-            {summaryLoading ? '...' : (summary?.total_variants ?? summary?.total_items ?? items.length)}
+            {summaryLoading ? '...' : (summary?.total_variants ?? items.length)}
           </div>
           <div className="admin-metric-subtext">Active catalog SKUs</div>
         </div>
@@ -177,7 +177,7 @@ const AdminInventoryPage = () => {
             </div>
           </div>
           <div className="admin-metric-value">
-            {summaryLoading ? '...' : (summary?.in_stock ?? summary?.available_items ?? 0)}
+            {summaryLoading ? '...' : (summary?.available_variants ?? summary?.in_stock ?? 0)}
           </div>
           <div className="admin-metric-subtext">Healthy stock levels</div>
         </div>
@@ -190,7 +190,7 @@ const AdminInventoryPage = () => {
             </div>
           </div>
           <div className="admin-metric-value" style={{ color: 'var(--color-warning)' }}>
-            {summaryLoading ? '...' : (summary?.low_stock ?? summary?.low_stock_count ?? 0)}
+            {summaryLoading ? '...' : (summary?.low_stock_variants ?? summary?.low_stock ?? 0)}
           </div>
           <div className="admin-metric-subtext">Requires replenishment</div>
         </div>
@@ -203,7 +203,7 @@ const AdminInventoryPage = () => {
             </div>
           </div>
           <div className="admin-metric-value" style={{ color: 'var(--color-error)' }}>
-            {summaryLoading ? '...' : (summary?.out_of_stock ?? summary?.out_of_stock_count ?? 0)}
+            {summaryLoading ? '...' : (summary?.out_of_stock_variants ?? summary?.out_of_stock ?? 0)}
           </div>
           <div className="admin-metric-subtext">Currently unavailable to customers</div>
         </div>
@@ -301,7 +301,7 @@ const AdminInventoryPage = () => {
                             src={getImageUrl(image)}
                             alt={productName}
                             style={{ width: '44px', height: '44px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--color-border)' }}
-                            onError={(e) => { e.target.src = '/placeholder-furniture.jpg'; }}
+                            onError={handleImageError}
                           />
                           <div>
                             <div style={{ fontWeight: '600', color: 'var(--color-text-main)' }}>

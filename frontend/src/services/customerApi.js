@@ -8,10 +8,16 @@ export const customerApi = {
   getAuthProfile: () => api.get('/api/customer/auth/profile', {}, 'CUSTOMER'),
 
   // Forgot Password Flow
-  sendForgotOtp: (email) => api.post('/api/customer/auth/forgot-password', { email }),
-  verifyForgotOtp: (email, otp) => api.post('/api/customer/auth/verify-otp', { email, otp }),
+  sendForgotOtp: (email) =>
+    api.post('/api/customer/auth/forgot-password', { email }, { credentials: 'include' }),
+  verifyForgotOtp: (email, otp) =>
+    api.post('/api/customer/auth/verify-otp', { email, otp }, { credentials: 'include' }),
   resetPassword: (email, otp, new_password, confirm_password) =>
-    api.post('/api/customer/auth/reset-password', { email, otp, new_password, confirm_password }),
+    api.post(
+      '/api/customer/auth/reset-password',
+      { email, otp, new_password, confirm_password },
+      { credentials: 'include' }
+    ),
 
   // Profile
   getProfile: () => api.get('/api/customer/profile', {}, 'CUSTOMER'),
@@ -34,6 +40,7 @@ export const customerApi = {
 
   // Orders
   placeOrder: (orderData) => api.post('/api/customer/orders', orderData, {}, 'CUSTOMER'),
+  createRazorpayOrder: () => api.post('/api/customer/payments/razorpay-order', {}, {}, 'CUSTOMER'),
   getMyOrders: () => api.get('/api/customer/orders', {}, 'CUSTOMER'),
   getMyOrderById: (id) => api.get(`/api/customer/orders/${id}`, {}, 'CUSTOMER'),
   cancelMyOrder: (id) => api.patch(`/api/customer/orders/${id}/cancel`, {}, {}, 'CUSTOMER'),

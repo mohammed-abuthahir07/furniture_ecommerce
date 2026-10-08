@@ -42,8 +42,9 @@ export function AdminOffersPage() {
     setIsLoading(true);
     try {
       const res = await adminApi.getAllOffers();
-      if (res.success && Array.isArray(res.data)) {
-        setOffers(res.data);
+      const list = res.offers || res.data;
+      if (res.success && Array.isArray(list)) {
+        setOffers(list);
       }
     } catch (err) {
       toastError(err.message || 'Failed to load offers.');

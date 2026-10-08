@@ -14,7 +14,7 @@ import { isValidEmail } from '../../utils/validators';
 export function CheckoutPage() {
   const navigate = useNavigate();
   const { customer } = useAuth();
-  const { cartItems, totalItems, subtotal, clearCart } = useCart();
+  const { cartItems, totalItems, subtotal, fetchCart } = useCart();
   const { success, error: toastError } = useToast();
 
   const [formData, setFormData] = useState({
@@ -48,6 +48,65 @@ export function CheckoutPage() {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
+
+  const loadRazorpay = () => {
+    if (window.Razorpay) return Promise.resolve(true);
+
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const openRazorpayCheckout = (payment, customerDetails) => new Promise((resolve) => {
+    let settled = false;
+    let paymentFailed = false;
+
+    const finish = (value) => {
+      if (settled) return;
+      settled = true;
+      resolve(value);
+    };
+
+    const checkout = new window.Razorpay({
+      key: payment.key_id,
+      amount: payment.amount,
+      currency: payment.currency || 'INR',
+      name: 'WoodCraft',
+      description: 'Solid wood furniture order',
+      order_id: payment.razorpay_order_id,
+      prefill: {
+        name: customerDetails.customer_name,
+        email: customerDetails.customer_email,
+        contact: customerDetails.customer_phone,
+      },
+      theme: { color: '#8a5a3b' },
+      handler: (response) => {
+        if (!response?.razorpay_payment_id || !response?.razorpay_order_id || !response?.razorpay_signature) {
+          finish({ failed: true });
+          return;
+        }
+        finish({
+          razorpay_order_id: response.razorpay_order_id,
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_signature: response.razorpay_signature,
+        });
+      },
+      modal: {
+        ondismiss: () => finish(paymentFailed ? { failed: true } : null),
+      },
+    });
+
+    checkout.on('payment.failed', () => {
+      paymentFailed = true;
+      finish({ failed: true });
+    });
+    checkout.open();
+  });
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
@@ -85,22 +144,59 @@ export function CheckoutPage() {
       return;
     }
 
+    let onlinePayment = null;
+
     try {
       setIsPlacingOrder(true);
-      const res = await customerApi.placeOrder(formData);
+
+      if (formData.payment_method === 'ONLINE') {
+        const ready = await loadRazorpay();
+        if (!ready) {
+          toastError('Online payment could not be opened. You can still place a cash on delivery order.');
+          return;
+        }
+
+        const paymentRes = await customerApi.createRazorpayOrder();
+        if (!paymentRes?.success || !paymentRes.data?.razorpay_order_id) {
+          toastError('Online payment could not be started. No furniture order was placed.');
+          return;
+        }
+
+        onlinePayment = await openRazorpayCheckout(paymentRes.data, formData);
+
+        if (!onlinePayment || onlinePayment.failed) {
+          toastError('Payment failed. The furniture order was not placed.');
+          return;
+        }
+      }
+
+      const res = await customerApi.placeOrder({
+        ...formData,
+        ...(onlinePayment || {}),
+      });
+
+      if (formData.payment_method === 'ONLINE' && res.data?.payment_status !== 'PAID') {
+        toastError('Payment was not confirmed. The furniture order was not completed.');
+        return;
+      }
+
       if (res.success && res.data) {
-        success('Order placed successfully!');
+        success(formData.payment_method === 'ONLINE' ? 'Payment received and order placed.' : 'Order placed successfully!');
         setOrderPlacedData(res.data);
+        fetchCart();
       }
     } catch (err) {
-      toastError(err.message || 'Failed to place order. Please try again.');
+      const paymentHint = onlinePayment?.razorpay_payment_id
+        ? ` If money was deducted, share payment ${onlinePayment.razorpay_payment_id} with the studio.`
+        : '';
+      toastError(`${err.message || 'Failed to place order. Please try again.'}${paymentHint}`);
     } finally {
       setIsPlacingOrder(false);
     }
   };
 
   const breadcrumbs = [
-    { label: 'Cart', to: '/account/cart' },
+    { label: 'Cart', to: '/cart' },
     { label: 'Checkout', to: '/checkout' },
   ];
 
@@ -138,7 +234,13 @@ export function CheckoutPage() {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
               <span style={{ color: 'var(--neutral-500)' }}>Payment Method:</span>
-              <span style={{ fontWeight: 600 }}>{orderPlacedData.payment_method === 'COD' ? 'Cash on Delivery' : 'Online Payment (Pending)'}</span>
+              <span style={{ fontWeight: 600 }}>
+                {orderPlacedData.payment_method === 'COD'
+                  ? 'Cash on Delivery'
+                  : orderPlacedData.payment_status === 'PAID'
+                    ? 'Paid online with Razorpay'
+                    : 'Online payment'}
+              </span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', borderTop: '1px solid var(--neutral-200)', paddingTop: '0.5rem', marginTop: '0.5rem' }}>
               <span style={{ fontWeight: 700 }}>Total Paid/Due:</span>
@@ -345,7 +447,7 @@ export function CheckoutPage() {
                   <CreditCard size={22} color="var(--primary-700)" />
                   <div>
                     <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>Online Payment Gateway (Debit/Credit/UPI)</div>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--neutral-500)' }}>Card, NetBanking & UPI (Pending Gateway)</div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--neutral-500)' }}>Pay now with card, UPI, or net banking</div>
                   </div>
                 </label>
               </div>
@@ -395,7 +497,13 @@ export function CheckoutPage() {
               disabled={isPlacingOrder}
             >
               <Lock size={16} />
-              <span>{isPlacingOrder ? 'Processing Order...' : 'Place Furniture Order'}</span>
+              <span>
+                {isPlacingOrder
+                  ? 'Processing Order...'
+                  : formData.payment_method === 'ONLINE'
+                    ? 'Pay Online & Place Order'
+                    : 'Place Furniture Order'}
+              </span>
             </button>
 
             <div style={{ marginTop: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: '0.78rem', color: 'var(--neutral-500)' }}>

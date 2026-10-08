@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { adminApi } from '../../services/adminApi';
 import { useToast } from '../../context/ToastContext';
-import { formatCurrency, formatNumber } from '../../utils/formatters';
+import { formatCurrency, formatNumber, getDateRange } from '../../utils/formatters';
 import { SimpleLineChart, SimpleBarChart, SimpleDonutChart } from '../../components/admin/SimpleChart';
 import Loader from '../../components/common/Loader';
 import { 
@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 
 const AdminAnalyticsPage = () => {
-  const { showError } = useToast();
+  const { error: showError } = useToast();
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState('30'); // 7, 30, 90
   const [stats, setStats] = useState(null);
@@ -29,28 +29,29 @@ const AdminAnalyticsPage = () => {
   const fetchAnalyticsData = async () => {
     try {
       setLoading(true);
+      const { from, to } = getDateRange(Number(timeRange));
       const [statsRes, chartRes, topRes, catRes, statusRes] = await Promise.allSettled([
-        adminApi.getDashboardStats(),
-        adminApi.getDashboardSalesChart(Number(timeRange)),
-        adminApi.getDashboardTopProducts(8),
-        adminApi.getDashboardCategorySales(),
-        adminApi.getDashboardOrdersByStatus()
+        adminApi.getAnalyticsSummary(from, to),
+        adminApi.getSalesTrend(from, to),
+        adminApi.getBestSellingProductsAnalytics(from, to),
+        adminApi.getBestSellingCategoriesAnalytics(from, to),
+        adminApi.getOrdersByStatusAnalytics(from, to)
       ]);
 
-      if (statsRes.status === 'fulfilled' && statsRes.value.data?.success) {
-        setStats(statsRes.value.data.data);
+      if (statsRes.status === 'fulfilled' && statsRes.value.success) {
+        setStats(statsRes.value.summary || null);
       }
-      if (chartRes.status === 'fulfilled' && chartRes.value.data?.success) {
-        setSalesChart(chartRes.value.data.data || []);
+      if (chartRes.status === 'fulfilled' && chartRes.value.success) {
+        setSalesChart(chartRes.value.sales || []);
       }
-      if (topRes.status === 'fulfilled' && topRes.value.data?.success) {
-        setTopProducts(topRes.value.data.data || []);
+      if (topRes.status === 'fulfilled' && topRes.value.success) {
+        setTopProducts(topRes.value.products || []);
       }
-      if (catRes.status === 'fulfilled' && catRes.value.data?.success) {
-        setCategorySales(catRes.value.data.data || []);
+      if (catRes.status === 'fulfilled' && catRes.value.success) {
+        setCategorySales(catRes.value.categories || []);
       }
-      if (statusRes.status === 'fulfilled' && statusRes.value.data?.success) {
-        setOrdersByStatus(statusRes.value.data.data || []);
+      if (statusRes.status === 'fulfilled' && statusRes.value.success) {
+        setOrdersByStatus(statusRes.value.orders || []);
       }
     } catch (err) {
       showError('Failed to load analytics data');
@@ -65,8 +66,8 @@ const AdminAnalyticsPage = () => {
 
   // Format sales chart data for SimpleLineChart / SimpleBarChart
   const formattedSalesData = Array.isArray(salesChart) ? salesChart.map(item => ({
-    label: item.date ? item.date.substring(5) : (item.label || ''),
-    value: Number(item.revenue || item.sales || item.total || 0)
+    label: item.sales_date ? String(item.sales_date).substring(5, 10) : (item.date ? String(item.date).substring(5) : (item.label || '')),
+    value: Number(item.total_revenue || item.revenue || item.sales || item.total || 0)
   })) : [];
 
   // Format order status donut data
@@ -81,15 +82,15 @@ const AdminAnalyticsPage = () => {
   };
 
   const formattedStatusData = Array.isArray(ordersByStatus) ? ordersByStatus.map(item => ({
-    label: (item.status || item.name || 'OTHER').replace(/_/g, ' '),
-    value: Number(item.count || item.total || 0),
-    color: statusColors[item.status] || '#94a3b8'
+    label: (item.order_status || item.status || item.name || 'OTHER').replace(/_/g, ' '),
+    value: Number(item.total_orders || item.count || item.total || 0),
+    color: statusColors[item.order_status || item.status] || '#94a3b8'
   })) : [];
 
   // Format Category Sales Bar Data
   const formattedCatData = Array.isArray(categorySales) ? categorySales.map(item => ({
     label: item.category_name || item.name || 'General',
-    value: Number(item.revenue || item.total_sales || item.count || 0)
+    value: Number(item.total_sales || item.revenue || item.count || 0)
   })) : [];
 
   return (
@@ -204,7 +205,7 @@ const AdminAnalyticsPage = () => {
           </div>
 
           {/* 2-Column Analytics: Order Status Breakdown & Category Revenue */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '24px', marginBottom: '24px' }}>
+          <div className="admin-split-grid">
             {/* Status Breakdown */}
             <div className="admin-card">
               <div className="admin-card-header">
@@ -213,7 +214,7 @@ const AdminAnalyticsPage = () => {
               <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 {formattedStatusData.length > 0 ? (
                   <>
-                    <SimpleDonutChart data={formattedStatusData} size={200} strokeWidth={24} />
+                    <SimpleDonutChart segments={formattedStatusData} size={200} />
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center', marginTop: '20px', width: '100%' }}>
                       {formattedStatusData.map((item, idx) => (
                         <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
@@ -305,11 +306,11 @@ const AdminAnalyticsPage = () => {
                           </span>
                         </td>
                         <td>
-                          <strong>{formatNumber(prod.total_sold || prod.units_sold || prod.sales_count || 0)}</strong> units
+                          <strong>{formatNumber(prod.units_sold || prod.total_sold || prod.total_quantity_sold || prod.sales_count || 0)}</strong> units
                         </td>
                         <td>
                           <span style={{ fontWeight: '700', color: 'var(--color-primary)' }}>
-                            {formatCurrency(prod.total_revenue || prod.revenue || 0)}
+                            {formatCurrency(prod.total_sales || prod.total_revenue || prod.revenue || 0)}
                           </span>
                         </td>
                       </tr>
