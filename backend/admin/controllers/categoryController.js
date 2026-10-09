@@ -1,22 +1,41 @@
 const categoryModel = require("../models/categoryModel");
 
-
+// ========================================
 // CREATE CATEGORY
+// ========================================
 const createCategory = async (req, res) => {
   try {
-    const { name, description, image } = req.body;
+    const { name, description, image, status } = req.body || {};
 
-    if (!name || !name.trim()) {
+    if (typeof name !== "string" || !name.trim()) {
       return res.status(400).json({
         success: false,
         message: "Category name is required",
       });
     }
 
+    if (
+      status !== undefined &&
+      !["ACTIVE", "INACTIVE"].includes(status)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Status must be ACTIVE or INACTIVE",
+      });
+    }
+
+    // If a file was uploaded, store its URL path.
+    // Otherwise, accept an existing image path or null.
+    const imagePath = req.file
+      ? `/uploads/categories/${req.file.filename}`
+      : image || null;
+
     const categoryId = await categoryModel.createCategory({
       name: name.trim(),
-      description,
-      image,
+      description:
+        typeof description === "string" ? description.trim() : null,
+      image: imagePath,
+      status: status || "ACTIVE",
     });
 
     const category = await categoryModel.getCategoryById(categoryId);
@@ -26,7 +45,6 @@ const createCategory = async (req, res) => {
       message: "Category created successfully",
       category,
     });
-
   } catch (error) {
     console.error("Create category error:", error);
 
@@ -44,8 +62,9 @@ const createCategory = async (req, res) => {
   }
 };
 
-
+// ========================================
 // GET ALL CATEGORIES
+// ========================================
 const getAllCategories = async (req, res) => {
   try {
     const categories = await categoryModel.getAllCategories();
@@ -55,7 +74,6 @@ const getAllCategories = async (req, res) => {
       message: "Categories fetched successfully",
       categories,
     });
-
   } catch (error) {
     console.error("Get all categories error:", error);
 
@@ -66,11 +84,19 @@ const getAllCategories = async (req, res) => {
   }
 };
 
-
+// ========================================
 // GET CATEGORY BY ID
+// ========================================
 const getCategoryById = async (req, res) => {
   try {
     const { id } = req.params;
+
+    if (!/^\d+$/.test(id) || Number(id) < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid category ID",
+      });
+    }
 
     const category = await categoryModel.getCategoryById(id);
 
@@ -86,7 +112,6 @@ const getCategoryById = async (req, res) => {
       message: "Category fetched successfully",
       category,
     });
-
   } catch (error) {
     console.error("Get category by ID error:", error);
 
@@ -97,17 +122,35 @@ const getCategoryById = async (req, res) => {
   }
 };
 
-
+// ========================================
 // UPDATE CATEGORY
+// ========================================
 const updateCategory = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, image } = req.body;
+    const { name, description, image, status } = req.body || {};
 
-    if (!name || !name.trim()) {
+    if (!/^\d+$/.test(id) || Number(id) < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid category ID",
+      });
+    }
+
+    if (typeof name !== "string" || !name.trim()) {
       return res.status(400).json({
         success: false,
         message: "Category name is required",
+      });
+    }
+
+    if (
+      status !== undefined &&
+      !["ACTIVE", "INACTIVE"].includes(status)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Status must be ACTIVE or INACTIVE",
       });
     }
 
@@ -120,10 +163,19 @@ const updateCategory = async (req, res) => {
       });
     }
 
+    // Preserve the existing image if no new image is selected.
+    const imagePath = req.file
+      ? `/uploads/categories/${req.file.filename}`
+      : image || existingCategory.image || null;
+
     await categoryModel.updateCategory(id, {
       name: name.trim(),
-      description,
-      image,
+      description:
+        typeof description === "string"
+          ? description.trim()
+          : description ?? null,
+      image: imagePath,
+      status: status || existingCategory.status,
     });
 
     const updatedCategory = await categoryModel.getCategoryById(id);
@@ -133,7 +185,6 @@ const updateCategory = async (req, res) => {
       message: "Category updated successfully",
       category: updatedCategory,
     });
-
   } catch (error) {
     console.error("Update category error:", error);
 
@@ -151,12 +202,20 @@ const updateCategory = async (req, res) => {
   }
 };
 
-
+// ========================================
 // ACTIVATE / DEACTIVATE CATEGORY
+// ========================================
 const updateCategoryStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status } = req.body || {};
+
+    if (!/^\d+$/.test(id) || Number(id) < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid category ID",
+      });
+    }
 
     if (!["ACTIVE", "INACTIVE"].includes(status)) {
       return res.status(400).json({
@@ -183,7 +242,6 @@ const updateCategoryStatus = async (req, res) => {
       message: `Category ${status.toLowerCase()} successfully`,
       category: updatedCategory,
     });
-
   } catch (error) {
     console.error("Update category status error:", error);
 
@@ -194,11 +252,19 @@ const updateCategoryStatus = async (req, res) => {
   }
 };
 
-
+// ========================================
 // DELETE CATEGORY
+// ========================================
 const deleteCategory = async (req, res) => {
   try {
     const { id } = req.params;
+
+    if (!/^\d+$/.test(id) || Number(id) < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid category ID",
+      });
+    }
 
     const existingCategory = await categoryModel.getCategoryById(id);
 
@@ -215,9 +281,17 @@ const deleteCategory = async (req, res) => {
       success: true,
       message: "Category deleted successfully",
     });
-
   } catch (error) {
     console.error("Delete category error:", error);
+
+    // The category may be referenced by products.
+    if (error.code === "ER_ROW_IS_REFERENCED_2") {
+      return res.status(409).json({
+        success: false,
+        message:
+          "Cannot delete this category because products or other records are linked to it.",
+      });
+    }
 
     return res.status(500).json({
       success: false,
@@ -226,7 +300,9 @@ const deleteCategory = async (req, res) => {
   }
 };
 
-
+// ========================================
+// EXPORT CONTROLLERS
+// ========================================
 module.exports = {
   createCategory,
   getAllCategories,
@@ -235,3 +311,4 @@ module.exports = {
   updateCategoryStatus,
   deleteCategory,
 };
+

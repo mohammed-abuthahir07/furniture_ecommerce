@@ -1,3 +1,4 @@
+
 const express = require("express");
 
 const {
@@ -10,17 +11,17 @@ const {
 } = require("../controllers/categoryController");
 
 const adminAuthMiddleware = require("../../middleware/adminAuthMiddleware");
+const categoryUploadMiddleware = require("../../middleware/categoryUploadMiddleware");
 
 const router = express.Router();
-
 
 // CREATE CATEGORY
 router.post(
   "/",
   adminAuthMiddleware,
+  categoryUploadMiddleware.single("image"),
   createCategory
 );
-
 
 // GET ALL CATEGORIES
 router.get(
@@ -29,7 +30,6 @@ router.get(
   getAllCategories
 );
 
-
 // GET CATEGORY BY ID
 router.get(
   "/:id",
@@ -37,14 +37,13 @@ router.get(
   getCategoryById
 );
 
-
 // UPDATE CATEGORY
 router.put(
   "/:id",
   adminAuthMiddleware,
+  categoryUploadMiddleware.single("image"),
   updateCategory
 );
-
 
 // ACTIVATE / DEACTIVATE CATEGORY
 router.patch(
@@ -53,7 +52,6 @@ router.patch(
   updateCategoryStatus
 );
 
-
 // DELETE CATEGORY
 router.delete(
   "/:id",
@@ -61,5 +59,5 @@ router.delete(
   deleteCategory
 );
 
-
 module.exports = router;
+

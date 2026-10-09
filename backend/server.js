@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
+const path = require('path')
 const cookieParser = require("cookie-parser");
 const { connectDB } = require("./config/database");
 const adminAuthRoutes = require("./admin/routes/adminAuthRoutes");
@@ -47,6 +48,7 @@ app.use(cors());
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use( "/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use((req, res, next) => {
   const sendJson = res.json.bind(res);
