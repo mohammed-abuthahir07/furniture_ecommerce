@@ -104,11 +104,7 @@ export function HomePage() {
 
             <div className="hero-image-card">
               <img
-                src={
-                  categories[0]?.image
-                    ? getImageUrl(categories[0].image)
-                    : 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=1000&q=80'
-                }
+                src='https://media.landmarkshops.in/cdn-cgi/image/h=550,w=550,q=85,fit=cover/homecentre/1000015764638-1000015574138_01-2100.jpg'
                 alt="Living room interior furniture"
                 width="640"
                 height="480"
