@@ -76,7 +76,7 @@ const AdminInventoryPage = () => {
         const query = search.trim().toLowerCase();
         if (query) {
           rows = rows.filter((row) =>
-            `${row.product_name || ''} ${row.variant_name || ''} ${row.color || ''}`.toLowerCase().includes(query)
+            `${row.product_name || ''} ${row.variant_name || ''} ${row.color || ''} ${row.sku || ''}`.toLowerCase().includes(query)
           );
         }
         if (stockStatus === 'IN_STOCK') {
@@ -290,7 +290,10 @@ const AdminInventoryPage = () => {
                   const isLow = stock > 0 && stock <= 5;
                   const isOut = stock <= 0;
                   const productName = item.product_name || item.Product?.name || 'Product';
-                  const sku = item.sku || item.variant_sku || `VAR-${item.id}`;
+                  const variantId = item.variant_id ?? item.id;
+                  const sku = item.sku || (variantId != null ? `VAR-${variantId}` : 'SKU unavailable');
+                  const sellingPrice = item.selling_price ?? item.variant_price ?? item.price;
+                  const hasPrice = sellingPrice !== undefined && sellingPrice !== null && sellingPrice !== '';
                   const image = item.image_url || item.Product?.main_image || item.main_image;
 
                   return (
@@ -331,7 +334,7 @@ const AdminInventoryPage = () => {
                       </td>
                       <td>
                         <div style={{ fontWeight: '600', color: 'var(--color-primary)' }}>
-                          {formatCurrency(item.price || item.variant_price || 0)}
+                          {hasPrice ? formatCurrency(sellingPrice) : 'Price unavailable'}
                         </div>
                       </td>
                       <td>
@@ -393,7 +396,7 @@ const AdminInventoryPage = () => {
         >
           <form onSubmit={handleUpdateStock}>
             <div style={{ marginBottom: '16px', padding: '12px', background: 'var(--color-bg-alt)', borderRadius: '8px', fontSize: '13px' }}>
-              <div><strong>SKU:</strong> {selectedVariant.sku || `VAR-${selectedVariant.id}`}</div>
+              <div><strong>SKU:</strong> {selectedVariant.sku || (selectedVariant.variant_id != null ? `VAR-${selectedVariant.variant_id}` : 'SKU unavailable')}</div>
               <div><strong>Current Available Units:</strong> {selectedVariant.stock_quantity ?? selectedVariant.stock ?? 0} units</div>
             </div>
 

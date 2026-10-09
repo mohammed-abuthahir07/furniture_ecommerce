@@ -3,6 +3,7 @@ const {
   getActiveProductById,
   getActiveProductImages,
   getActiveProductVariants,
+  getVariantImagesForVariants,
   getProductRatingSummary,
   getProductReviews,
 } = require("../models/productModel");
@@ -62,6 +63,23 @@ const getProductById = async (req, res) => {
 
     // Get active variants
     const variants = await getActiveProductVariants(productId);
+    const variantImages = await getVariantImagesForVariants(
+      variants.map((variant) => variant.id)
+    );
+    const imagesByVariant = new Map();
+    variantImages.forEach((image) => {
+      const list = imagesByVariant.get(image.variant_id) || [];
+      list.push({
+        id: image.id,
+        image: image.image,
+        image_title: image.image_title,
+        sort_order: image.sort_order,
+      });
+      imagesByVariant.set(image.variant_id, list);
+    });
+    variants.forEach((variant) => {
+      variant.images = imagesByVariant.get(variant.id) || [];
+    });
 
     // Get rating summary
     const rating = await getProductRatingSummary(productId);

@@ -34,6 +34,7 @@ import Modal from '../../components/common/Modal';
 import { DetailPageSkeleton } from '../../components/common/Skeleton';
 import { ErrorState } from '../../components/common/ErrorState';
 import { formatDate } from '../../utils/formatters';
+import { getImageUrl, handleImageError } from '../../utils/imageUrl';
 
 export function ProductDetailPage() {
   const { id } = useParams();
@@ -237,10 +238,16 @@ export function ProductDetailPage() {
         {/* Left: Multi-Angle Furniture Image Gallery */}
         <div>
           <ImageGallery
-            mainImage={main_image}
-            galleryImages={images}
-            productName={name}
+            key={selectedVariant?.images?.length ? `variant-${selectedVariant.id}` : `product-${id}`}
+            mainImage={selectedVariant?.images?.length ? null : main_image}
+            galleryImages={selectedVariant?.images?.length ? selectedVariant.images : images}
+            productName={selectedVariant?.images?.length ? `${name} — ${selectedVariant.variant_name}` : name}
           />
+          {selectedVariant && !selectedVariant.images?.length && (
+            <p className="variant-gallery-note">
+              Finish photos for {selectedVariant.variant_name} are not uploaded yet. These are the general product photos.
+            </p>
+          )}
         </div>
 
         {/* Right: Furniture Details, Variants, Specs & Actions */}
@@ -325,10 +332,23 @@ export function ProductDetailPage() {
                       key={v.id}
                       type="button"
                       className={`variant-chip ${isSelected ? 'active' : ''}`}
-                      onClick={() => setSelectedVariant(v)}
+                      onClick={() => {
+                        setSelectedVariant(v);
+                        setQuantity((current) => {
+                          if (v.stock_quantity <= 0) return 1;
+                          return Math.min(current, v.stock_quantity);
+                        });
+                      }}
                       style={!inStock ? { opacity: 0.5 } : {}}
                     >
-                      {v.color && (
+                      {v.images?.[0]?.image ? (
+                        <img
+                          src={getImageUrl(v.images[0].image)}
+                          alt=""
+                          className="variant-chip-thumb"
+                          onError={handleImageError}
+                        />
+                      ) : v.color && (
                         <span
                           className="variant-color-dot"
                           style={{ backgroundColor: v.color.toLowerCase().includes('walnut') ? '#5c4033' : v.color.toLowerCase().includes('teak') ? '#b8860b' : '#8b5a2b' }}

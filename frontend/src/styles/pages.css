@@ -475,6 +475,21 @@
   box-shadow: 0 0 0 1px var(--primary-600);
 }
 
+.variant-chip-thumb {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  object-fit: cover;
+  border: 1px solid var(--neutral-300);
+  flex-shrink: 0;
+}
+
+.variant-gallery-note {
+  margin-top: 0.75rem;
+  font-size: 0.82rem;
+  color: var(--neutral-600);
+}
+
 .variant-color-dot {
   width: 14px;
   height: 14px;

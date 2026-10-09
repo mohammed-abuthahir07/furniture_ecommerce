@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getImageUrl, handleImageError } from '../../utils/imageUrl';
 import { Modal } from './Modal';
 import { ZoomIn } from 'lucide-react';
@@ -24,6 +24,12 @@ export function ImageGallery({ mainImage, galleryImages = [], productName = 'Pro
 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
+  const galleryKey = allImages.map((img) => img.id).join(',');
+
+  useEffect(() => {
+    setSelectedIndex(0);
+    setIsZoomOpen(false);
+  }, [galleryKey]);
   const touchStartX = useRef(null);
   const didSwipe = useRef(false);
 

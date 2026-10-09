@@ -57,6 +57,17 @@ export const adminApi = {
   updateImage: (id, data) => api.put(`/api/admin/product-images/${id}`, data, {}, 'ADMIN'),
   deleteImage: (id) => api.delete(`/api/admin/product-images/${id}`, {}, 'ADMIN'),
 
+  getVariantImages: (variantId) =>
+    api.get(`/api/admin/product-variant-images/variant/${variantId}`, {}, 'ADMIN'),
+  addVariantImages: (formData) =>
+    api.post('/api/admin/product-variant-images', formData, {}, 'ADMIN'),
+  updateVariantImage: (id, data) =>
+    api.put(`/api/admin/product-variant-images/${id}`, data, {}, 'ADMIN'),
+  reorderVariantImages: (variantId, orderedIds) =>
+    api.put('/api/admin/product-variant-images/reorder', { variant_id: variantId, ordered_ids: orderedIds }, {}, 'ADMIN'),
+  deleteVariantImage: (id) =>
+    api.delete(`/api/admin/product-variant-images/${id}`, {}, 'ADMIN'),
+
   // Offers
   getAllOffers: () => api.get('/api/admin/offers', {}, 'ADMIN'),
   getOfferById: (id) => api.get(`/api/admin/offers/${id}`, {}, 'ADMIN'),

@@ -11,6 +11,8 @@ import {
   Upload,
   CheckCircle2,
   Boxes,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import adminApi from '../../services/adminApi';
 import StatusBadge from '../../components/common/StatusBadge';
@@ -53,8 +55,16 @@ export function AdminProductDetailPage() {
   const [isSavingImage, setIsSavingImage] = useState(false);
 
   // Delete Dialog
-  const [deleteAction, setDeleteAction] = useState(null); // { type: 'variant' | 'image', id }
+  const [deleteAction, setDeleteAction] = useState(null); // { type: 'variant' | 'image' | 'variantImage', id }
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const [imageVariant, setImageVariant] = useState(null);
+  const [variantImages, setVariantImages] = useState([]);
+  const [variantImagesLoading, setVariantImagesLoading] = useState(false);
+  const [variantImagesError, setVariantImagesError] = useState('');
+  const [pendingFiles, setPendingFiles] = useState([]);
+  const [isUploadingVariantImages, setIsUploadingVariantImages] = useState(false);
+  const [isReordering, setIsReordering] = useState(false);
 
   const fetchProductData = async () => {
     setIsLoading(true);
@@ -163,6 +173,92 @@ export function AdminProductDetailPage() {
     }
   };
 
+  const loadVariantImages = async (variantId) => {
+    setVariantImagesLoading(true);
+    setVariantImagesError('');
+    try {
+      const res = await adminApi.getVariantImages(variantId);
+      setVariantImages(Array.isArray(res.images) ? res.images : []);
+    } catch (err) {
+      setVariantImagesError(err.message || 'Unable to load finish photos.');
+    } finally {
+      setVariantImagesLoading(false);
+    }
+  };
+
+  const openVariantGallery = (variant) => {
+    setImageVariant(variant);
+    setPendingFiles([]);
+    setVariantImages([]);
+    loadVariantImages(variant.id);
+  };
+
+  const closeVariantGallery = () => {
+    pendingFiles.forEach((file) => URL.revokeObjectURL(file.preview));
+    setPendingFiles([]);
+    setImageVariant(null);
+    setVariantImagesError('');
+  };
+
+  const handlePendingFiles = (event) => {
+    const selected = Array.from(event.target.files || []);
+    event.target.value = '';
+    if (selected.length === 0) return;
+    const next = selected.slice(0, 8).map((file) => ({
+      file,
+      preview: URL.createObjectURL(file),
+      name: file.name,
+    }));
+    setPendingFiles((current) => {
+      current.forEach((item) => URL.revokeObjectURL(item.preview));
+      return next;
+    });
+  };
+
+  const handleUploadVariantImages = async () => {
+    if (!imageVariant || pendingFiles.length === 0) {
+      toastError('Choose at least one photo for this finish.');
+      return;
+    }
+    try {
+      setIsUploadingVariantImages(true);
+      const payload = new FormData();
+      payload.append('variant_id', imageVariant.id);
+      pendingFiles.forEach((item) => payload.append('images', item.file));
+      const res = await adminApi.addVariantImages(payload);
+      if (res.success) {
+        success('Finish photos uploaded.');
+        pendingFiles.forEach((item) => URL.revokeObjectURL(item.preview));
+        setPendingFiles([]);
+        setVariantImages(Array.isArray(res.images) ? res.images : []);
+        fetchProductData();
+      }
+    } catch (err) {
+      toastError(err.message || 'Unable to upload these photos.');
+    } finally {
+      setIsUploadingVariantImages(false);
+    }
+  };
+
+  const moveVariantImage = async (index, direction) => {
+    const target = index + direction;
+    if (!imageVariant || target < 0 || target >= variantImages.length || isReordering) return;
+    const next = [...variantImages];
+    const [item] = next.splice(index, 1);
+    next.splice(target, 0, item);
+    try {
+      setIsReordering(true);
+      const res = await adminApi.reorderVariantImages(imageVariant.id, next.map((image) => image.id));
+      if (res.success) {
+        setVariantImages(Array.isArray(res.images) ? res.images : next);
+      }
+    } catch (err) {
+      toastError(err.message || 'Unable to reorder these photos.');
+    } finally {
+      setIsReordering(false);
+    }
+  };
+
   // Gallery Image Actions
   const openAddImageModal = () => {
     setEditingImage(null);
@@ -238,6 +334,16 @@ export function AdminProductDetailPage() {
         if (res.success) {
           success('Gallery image deleted successfully.');
           setDeleteAction(null);
+          fetchProductData();
+        }
+      } else if (deleteAction.type === 'variantImage') {
+        const res = await adminApi.deleteVariantImage(deleteAction.id);
+        if (res.success) {
+          success('Finish photo deleted.');
+          setDeleteAction(null);
+          if (imageVariant) {
+            await loadVariantImages(imageVariant.id);
+          }
           fetchProductData();
         }
       }
@@ -317,7 +423,12 @@ export function AdminProductDetailPage() {
                 ) : (
                   variants.map((v) => (
                     <tr key={v.id}>
-                      <td style={{ fontWeight: 700, color: '#0f172a' }}>{v.variant_name}</td>
+                      <td style={{ fontWeight: 700, color: '#0f172a' }}>
+                        {v.variant_name}
+                        <div style={{ fontWeight: 500, fontSize: '0.72rem', color: '#64748b' }}>
+                          {Number(v.image_count) > 0 ? `${v.image_count} finish photos` : 'No finish photos'}
+                        </div>
+                      </td>
                       <td>{v.color || 'Standard'}</td>
                       <td>
                         <span
@@ -341,6 +452,14 @@ export function AdminProductDetailPage() {
                       </td>
                       <td style={{ textAlign: 'right' }}>
                         <div className="table-actions" style={{ justifyContent: 'flex-end' }}>
+                          <button
+                            type="button"
+                            className="action-btn-sm"
+                            onClick={() => openVariantGallery(v)}
+                            title="Manage finish photos"
+                          >
+                            <ImageIcon size={14} />
+                          </button>
                           <button
                             type="button"
                             className="action-btn-sm"
@@ -372,7 +491,7 @@ export function AdminProductDetailPage() {
           <div className="admin-table-toolbar">
             <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6 }}>
               <ImageIcon size={18} color="var(--primary-600)" />
-              <span>Gallery Angles ({images.length})</span>
+              <span>Product Gallery ({images.length})</span>
             </h3>
             <button
               type="button"
@@ -384,6 +503,9 @@ export function AdminProductDetailPage() {
             </button>
           </div>
 
+          <p style={{ margin: '0 1.25rem', fontSize: '0.75rem', color: '#64748b' }}>
+            Shared product photos. Each finish keeps its own photos, managed from the variant row.
+          </p>
           <div style={{ padding: '1.25rem' }}>
             {images.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#64748b' }}>
@@ -563,6 +685,100 @@ export function AdminProductDetailPage() {
             </button>
           </div>
         </form>
+      </Modal>
+
+      <Modal
+        isOpen={!!imageVariant}
+        onClose={closeVariantGallery}
+        title={imageVariant ? `Photos · ${imageVariant.variant_name}` : 'Finish photos'}
+        size="lg"
+      >
+        {imageVariant && (
+          <div>
+            <p style={{ marginTop: 0, color: '#64748b', fontSize: '0.85rem' }}>
+              {imageVariant.color || 'Standard finish'}. These photos show only when a customer selects this finish.
+            </p>
+
+            <label className="form-label" htmlFor="variant-image-files">Add photos</label>
+            <input
+              id="variant-image-files"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              onChange={handlePendingFiles}
+            />
+            <p style={{ fontSize: '0.75rem', color: '#64748b' }}>
+              JPG, PNG, or WEBP. Up to 8 photos at a time, 5MB each, 12 per finish.
+            </p>
+
+            {pendingFiles.length > 0 && (
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', margin: '0.75rem 0' }}>
+                {pendingFiles.map((item) => (
+                  <img
+                    key={item.preview}
+                    src={item.preview}
+                    alt={item.name}
+                    style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 6, border: '1px solid #e2e8f0' }}
+                  />
+                ))}
+              </div>
+            )}
+
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={handleUploadVariantImages}
+              disabled={isUploadingVariantImages || pendingFiles.length === 0}
+            >
+              {isUploadingVariantImages ? 'Uploading...' : 'Upload photos'}
+            </button>
+
+            <div style={{ marginTop: '1.25rem' }}>
+              {variantImagesLoading && <p>Loading finish photos...</p>}
+              {variantImagesError && (
+                <div>
+                  <p style={{ color: 'var(--danger-500)' }}>{variantImagesError}</p>
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => loadVariantImages(imageVariant.id)}>
+                    Try again
+                  </button>
+                </div>
+              )}
+              {!variantImagesLoading && !variantImagesError && variantImages.length === 0 && (
+                <p style={{ color: '#64748b' }}>No photos for this finish yet. The store will show the general product photos until you upload some.</p>
+              )}
+              {!variantImagesLoading && variantImages.length > 0 && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.75rem' }}>
+                  {variantImages.map((img, index) => (
+                    <div key={img.id} style={{ border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden', background: '#fff' }}>
+                      <img
+                        src={getImageUrl(img.image)}
+                        alt={img.image_title || imageVariant.variant_name}
+                        style={{ width: '100%', height: 100, objectFit: 'cover' }}
+                        onError={handleImageError}
+                      />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.35rem' }}>
+                        <button type="button" className="action-btn-sm" disabled={index === 0 || isReordering} onClick={() => moveVariantImage(index, -1)} title="Move earlier">
+                          <ChevronLeft size={14} />
+                        </button>
+                        <button type="button" className="action-btn-sm" disabled={index === variantImages.length - 1 || isReordering} onClick={() => moveVariantImage(index, 1)} title="Move later">
+                          <ChevronRight size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          className="action-btn-sm delete"
+                          onClick={() => setDeleteAction({ type: 'variantImage', id: img.id })}
+                          title="Delete photo"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </Modal>
 
       {/* Delete Dialog */}

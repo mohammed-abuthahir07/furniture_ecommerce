@@ -1,4 +1,5 @@
 const productVariantModel = require("../models/productVariantModel");
+const productVariantImageModel = require("../models/productVariantImageModel");
 const productModel = require("../models/productModel");
 
 // CREATE VARIANT
@@ -410,7 +411,9 @@ const deleteVariant = async (req, res) => {
       });
     }
 
+    const finishPhotos = await productVariantImageModel.getImagesByVariantId(id);
     await productVariantModel.deleteVariant(id);
+    productVariantImageModel.removeImageFiles(finishPhotos.map((photo) => photo.image));
 
     return res.status(200).json({
       success: true,

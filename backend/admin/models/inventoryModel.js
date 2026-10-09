@@ -16,8 +16,10 @@ const getAllInventory = async () => {
       c.id AS category_id,
       c.name AS category_name,
 
+      CONCAT('VAR-', pv.id) AS sku,
       pv.variant_name,
       pv.color,
+      p.selling_price,
       pv.stock_quantity,
       pv.status AS variant_status,
 
@@ -127,8 +129,10 @@ const getLowStockInventory = async () => {
       c.id AS category_id,
       c.name AS category_name,
 
+      CONCAT('VAR-', pv.id) AS sku,
       pv.variant_name,
       pv.color,
+      p.selling_price,
       pv.stock_quantity,
 
       pv.status AS variant_status,
@@ -178,8 +182,10 @@ const getOutOfStockInventory = async () => {
       c.id AS category_id,
       c.name AS category_name,
 
+      CONCAT('VAR-', pv.id) AS sku,
       pv.variant_name,
       pv.color,
+      p.selling_price,
       pv.stock_quantity,
 
       pv.status AS variant_status,
@@ -231,6 +237,7 @@ const getInventoryByProduct = async (productId) => {
       p.name,
       p.brand,
       p.main_image,
+      p.selling_price,
       p.status,
 
       c.id AS category_id,
@@ -263,6 +270,7 @@ const getInventoryByProduct = async (productId) => {
       pv.id AS variant_id,
       pv.product_id,
 
+      CONCAT('VAR-', pv.id) AS sku,
       pv.variant_name,
       pv.color,
 
@@ -336,8 +344,10 @@ const getVariantById = async (variantId) => {
       pv.id AS variant_id,
       pv.product_id,
 
+      CONCAT('VAR-', pv.id) AS sku,
       pv.variant_name,
       pv.color,
+      p.selling_price,
       pv.stock_quantity,
       pv.status,
 

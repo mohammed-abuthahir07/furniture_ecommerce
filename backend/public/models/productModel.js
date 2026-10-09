@@ -141,6 +141,26 @@ const getActiveProductImages = async (productId) => {
 // GET ACTIVE PRODUCT VARIANTS
 // ======================================================
 
+const getVariantImagesForVariants = async (variantIds) => {
+  if (!Array.isArray(variantIds) || variantIds.length === 0) return [];
+  const placeholders = variantIds.map(() => "?").join(", ");
+  const [rows] = await pool.execute(
+    `
+      SELECT
+        id,
+        variant_id,
+        image,
+        image_title,
+        sort_order
+      FROM product_variant_images
+      WHERE variant_id IN (${placeholders})
+      ORDER BY sort_order ASC, id ASC
+    `,
+    variantIds
+  );
+  return rows;
+};
+
 const getActiveProductVariants = async (productId) => {
   const [rows] = await pool.execute(
     `
@@ -231,6 +251,7 @@ module.exports = {
   getActiveProductById,
   getActiveProductImages,
   getActiveProductVariants,
+  getVariantImagesForVariants,
   getProductRatingSummary,
   getProductReviews,
 };

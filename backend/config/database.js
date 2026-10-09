@@ -20,6 +20,8 @@ const connectDB = async () => {
 
     const { ensurePerformanceIndexes } = require("./ensureIndexes");
     await ensurePerformanceIndexes();
+    const { ensureVariantImageTable } = require("./ensureVariantImages");
+    await ensureVariantImageTable();
   } catch (error) {
     console.error("MySQL database connection failed:", error.message);
     process.exit(1);

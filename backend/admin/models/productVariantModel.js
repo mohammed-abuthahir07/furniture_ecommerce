@@ -44,7 +44,12 @@ const getVariantsByProductId = async (productId) => {
         ELSE 'AVAILABLE'
       END AS availability_status,
       created_at,
-      updated_at
+      updated_at,
+      (
+        SELECT COUNT(*)
+        FROM product_variant_images
+        WHERE product_variant_images.variant_id = product_variants.id
+      ) AS image_count
     FROM product_variants
     WHERE product_id = ?
     ORDER BY id ASC`,
