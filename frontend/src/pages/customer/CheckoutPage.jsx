@@ -462,7 +462,7 @@ export function CheckoutPage() {
 
             <div style={{ maxHeight: '220px', overflowY: 'auto', marginBottom: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {cartItems.map((item) => (
-                <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                <div key={item.cart_item_id ?? item.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
                   <div style={{ maxWidth: '65%' }}>
                     <div style={{ fontWeight: 600, color: 'var(--neutral-900)' }}>{item.product_name}</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--neutral-500)' }}>

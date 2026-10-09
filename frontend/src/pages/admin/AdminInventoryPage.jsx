@@ -310,9 +310,7 @@ const AdminInventoryPage = () => {
                             <div style={{ fontWeight: '600', color: 'var(--color-text-main)' }}>
                               {productName}
                             </div>
-                            <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
-                              ID: #{item.product_id || item.Product?.id || item.id}
-                            </div>
+                            
                           </div>
                         </div>
                       </td>

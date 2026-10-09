@@ -88,7 +88,7 @@ export function CustomizationRequestDetailPage() {
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <h2>Custom Request #{request.id}</h2>
+            <h2>Custom Request</h2>
             <div style={{ fontSize: '0.82rem', color: 'var(--neutral-500)' }}>
               Submitted on {formatDateTime(request.created_at)}
             </div>
@@ -122,9 +122,6 @@ export function CustomizationRequestDetailPage() {
                 >
                   {request.product_name}
                 </Link>
-                <div style={{ fontSize: '0.85rem', color: 'var(--neutral-500)', marginTop: 4 }}>
-                  Product ID: #{request.product_id}
-                </div>
               </div>
             </div>
           </div>
@@ -135,7 +132,7 @@ export function CustomizationRequestDetailPage() {
               Your Custom Specifications
             </h3>
             <p style={{ color: 'var(--neutral-800)', fontSize: '0.95rem', lineHeight: 1.7, whiteSpace: 'pre-line' }}>
-              {request.requirement}
+              {request.customer_requirement || request.requirement}
             </p>
 
             {request.customer_image && (
@@ -161,20 +158,20 @@ export function CustomizationRequestDetailPage() {
               Studio & Artisan Quote
             </h3>
 
-            {request.admin_response ? (
+            {(request.admin_reply || request.admin_response) ? (
               <div>
                 <div style={{ fontSize: '0.85rem', color: 'var(--neutral-500)', marginBottom: 4 }}>
                   Master Artisan Feedback:
                 </div>
                 <p style={{ color: 'var(--neutral-800)', fontSize: '0.92rem', lineHeight: 1.6, marginBottom: '1.25rem', background: 'var(--primary-50)', padding: '0.85rem', borderRadius: 'var(--radius-sm)' }}>
-                  "{request.admin_response}"
+                  "{request.admin_reply || request.admin_response}"
                 </p>
 
-                {request.estimated_price && (
+                {(request.additional_cost ?? request.estimated_price) > 0 && (
                   <div className="summary-row">
                     <span>Estimated Price</span>
                     <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--primary-700)' }}>
-                      {formatCurrency(request.estimated_price)}
+                      {formatCurrency(request.additional_cost ?? request.estimated_price)}
                     </span>
                   </div>
                 )}
@@ -203,7 +200,12 @@ export function CustomizationRequestDetailPage() {
               <div style={{ textAlign: 'center', padding: '1.5rem 0', color: 'var(--neutral-500)' }}>
                 <Clock size={28} style={{ margin: '0 auto 0.5rem', opacity: 0.5 }} />
                 <p style={{ fontSize: '0.85rem' }}>
-                  Our timber architects are currently evaluating your dimensions and crafting an estimated quote.
+                  {request.status === 'UNDER_REVIEW' && 'Your request is under review. This page updates when the studio changes the status.'}
+                  {request.status === 'ADMIN_REPLIED' && 'The studio has updated this request. Refresh if a written reply does not appear yet.'}
+                  {request.status === 'REJECTED' && 'This customization request was not accepted.'}
+                  {request.status === 'CUSTOMER_ACCEPTED' && 'You accepted this quote. The studio will follow up.'}
+                  {(!request.status || request.status === 'PENDING') && 'Our timber architects are currently evaluating your dimensions and crafting an estimated quote.'}
+                  {request.status && !['UNDER_REVIEW', 'ADMIN_REPLIED', 'REJECTED', 'CUSTOMER_ACCEPTED', 'PENDING'].includes(request.status) && `Current status: ${request.status.replaceAll('_', ' ')}.`}
                 </p>
               </div>
             )}

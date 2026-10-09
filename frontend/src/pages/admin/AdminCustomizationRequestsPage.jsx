@@ -171,7 +171,6 @@ const AdminCustomizationRequestsPage = () => {
                   <th>Base Product / Type</th>
                   <th>Wood / Finish</th>
                   <th>Custom Dimensions</th>
-                  <th>Quoted Price</th>
                   <th>Status</th>
                   <th>Action</th>
                 </tr>
@@ -185,7 +184,7 @@ const AdminCustomizationRequestsPage = () => {
                   return (
                     <tr key={req.id}>
                       <td>
-                        <span style={{ fontFamily: 'monospace', fontWeight: '600' }}>#{req.id}</span>
+                        <span style={{ fontFamily: 'monospace', fontWeight: '600' }}>{req.id}</span>
                         <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
                           {formatDate(req.created_at)}
                         </div>
@@ -216,17 +215,7 @@ const AdminCustomizationRequestsPage = () => {
                       <td>
                         <span style={{ fontSize: '13px', fontFamily: 'monospace' }}>{dimensions}</span>
                       </td>
-                      <td>
-                        {req.admin_quote_price || req.quoted_price ? (
-                          <strong style={{ color: 'var(--color-primary)' }}>
-                            {formatCurrency(req.admin_quote_price || req.quoted_price)}
-                          </strong>
-                        ) : (
-                          <span style={{ color: 'var(--color-text-muted)', fontStyle: 'italic', fontSize: '12px' }}>
-                            Unquoted
-                          </span>
-                        )}
-                      </td>
+                      
                       <td>{getStatusBadge(req.status)}</td>
                       <td>
                         <button

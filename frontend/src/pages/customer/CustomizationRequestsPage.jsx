@@ -73,8 +73,9 @@ export function CustomizationRequestsPage() {
     }
 
     const payload = new FormData();
+    payload.append('request_type', 'EXISTING_PRODUCT');
     payload.append('product_id', productId);
-    payload.append('requirement', requirement.trim());
+    payload.append('customer_requirement', requirement.trim());
     if (customerImageFile) {
       payload.append('customer_image', customerImageFile);
     }
@@ -157,13 +158,13 @@ export function CustomizationRequestsPage() {
               </div>
 
               <div style={{ background: 'var(--neutral-50)', padding: '0.9rem 1rem', borderRadius: 'var(--radius-sm)', marginBottom: '1rem', fontSize: '0.88rem', color: 'var(--neutral-700)' }}>
-                <strong>Your Requirement:</strong> "{req.requirement}"
+                <strong>Your Requirement:</strong> "{req.customer_requirement || req.requirement}"
               </div>
 
-              {req.admin_response && (
+              {(req.admin_reply || req.admin_response) && (
                 <div style={{ background: 'var(--primary-50)', borderLeft: '3px solid var(--primary-600)', padding: '0.9rem 1rem', borderRadius: '0 var(--radius-sm) var(--radius-sm) 0', marginBottom: '1rem', fontSize: '0.88rem', color: 'var(--primary-900)' }}>
                   <div style={{ fontWeight: 700, marginBottom: 2 }}>Artisan Response:</div>
-                  <div>"{req.admin_response}"</div>
+                  <div>"{req.admin_reply || req.admin_response}"</div>
                   {(req.estimated_price || req.estimated_days) && (
                     <div style={{ marginTop: '0.5rem', display: 'flex', gap: '1.5rem', fontSize: '0.82rem', fontWeight: 600 }}>
                       {req.estimated_price && <span>Estimated Quote: {formatCurrency(req.estimated_price)}</span>}

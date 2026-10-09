@@ -48,8 +48,10 @@ export function CartPage() {
         <div className="cart-checkout-layout">
           {/* Cart Items List */}
           <div className="cart-items-list">
-            {cartItems.map((item) => (
-              <article key={item.id} className="cart-item-card">
+            {cartItems.map((item) => {
+              const cartItemId = item.cart_item_id ?? item.id;
+              return (
+              <article key={cartItemId} className="cart-item-card">
                 <img
                   src={getImageUrl(item.main_image)}
                   alt={item.product_name}
@@ -69,7 +71,7 @@ export function CartPage() {
                 <div className="cart-item-qty">
                   <QuantitySelector
                     quantity={item.quantity}
-                    onChange={(newQty) => updateQuantity(item.id, newQty)}
+                    onChange={(newQty) => updateQuantity(cartItemId, newQty)}
                   />
                 </div>
 
@@ -79,7 +81,7 @@ export function CartPage() {
                   <button
                     type="button"
                     className="cart-item-remove-btn"
-                    onClick={() => removeFromCart(item.id)}
+                    onClick={() => removeFromCart(cartItemId)}
                     aria-label={`Remove ${item.product_name} from cart`}
                   >
                     <Trash2 size={16} />
@@ -87,7 +89,8 @@ export function CartPage() {
                   </button>
                 </div>
               </article>
-            ))}
+              );
+            })}
             <Link to="/products" className="cart-continue">Continue browsing furniture</Link>
           </div>
 

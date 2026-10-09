@@ -104,7 +104,7 @@ const AdminCustomRequirementsPage = () => {
                 {requirements.map((req) => (
                   <tr key={req.id}>
                     <td>
-                      <span style={{ fontFamily: 'monospace', fontWeight: '600' }}>#{req.id}</span>
+                      <span style={{ fontFamily: 'monospace', fontWeight: '600' }}>{req.id}</span>
                     </td>
                     <td>
                       <div style={{ fontWeight: '600', color: 'var(--color-text-main)' }}>

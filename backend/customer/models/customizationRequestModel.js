@@ -71,10 +71,7 @@ const createCustomizationRequest = async ({
 | IMPORTANT:
 | Customer can see only their own requests.
 |
-| We intentionally DO NOT return:
-| - status
-| - admin_reply
-| - additional_cost
+| The customer can see the studio status, reply, and quote.
 |
 |--------------------------------------------------------------------------
 */
@@ -95,6 +92,10 @@ const getCustomerCustomizationRequests = async (
 
       r.customer_requirement,
       r.customer_image,
+
+      r.status,
+      r.admin_reply,
+      r.additional_cost,
 
       r.created_at,
       r.updated_at
@@ -123,10 +124,7 @@ const getCustomerCustomizationRequests = async (
 | IMPORTANT:
 | Only the owner can access this request.
 |
-| We intentionally DO NOT return:
-| - status
-| - admin_reply
-| - additional_cost
+| The customer can see the studio status, reply, and quote.
 |
 |--------------------------------------------------------------------------
 */
@@ -148,6 +146,10 @@ const getCustomerCustomizationRequestById = async (
 
       r.customer_requirement,
       r.customer_image,
+
+      r.status,
+      r.admin_reply,
+      r.additional_cost,
 
       r.created_at,
       r.updated_at
