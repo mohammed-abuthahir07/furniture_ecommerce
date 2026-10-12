@@ -400,7 +400,7 @@ const googleLogin = async (req, res) => {
       await googleClient.verifyIdToken({
         idToken: id_token,
         audience:
-          process.env.GOOGLE_CLIENT_ID
+          "1087448305306-e4sleo4ucou8co4mrmmf6rhaujr1g4qa.apps.googleusercontent.com"
       });
 
 
